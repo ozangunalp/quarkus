@@ -1257,11 +1257,6 @@
             </dependency>
             <dependency>
                 <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-kafka-client-ui</artifactId>
-                <version>${project.version}</version>
-            </dependency>            
-            <dependency>
-                <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-kafka-streams</artifactId>
                 <version>${project.version}</version>
             </dependency>
