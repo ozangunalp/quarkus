@@ -1,9 +1,9 @@
 package io.quarkus.csrf.reactive.runtime;
 
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerResponseContext;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerResponseContext;
 
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.server.ServerResponseFilter;
