@@ -28,6 +28,12 @@ public class KafkaDevServicesBuildTimeConfig {
     public Optional<Integer> port;
 
     /**
+     *
+     */
+    @ConfigItem(defaultValue = "redpanda")
+    public Provider provider = Provider.REDPANDA;
+
+    /**
      * The Kafka container image to use.
      * <p>
      * Only Redpanda and Strimzi images are supported.
@@ -45,8 +51,8 @@ public class KafkaDevServicesBuildTimeConfig {
      * See https://github.com/strimzi/test-container and https://quay.io/repository/strimzi-test-container/test-container
      * <p>
      */
-    @ConfigItem(defaultValue = "docker.io/vectorized/redpanda:v22.3.4")
-    public String imageName;
+    @ConfigItem
+    public Optional<String> imageName;
 
     /**
      * Indicates if the Kafka broker managed by Quarkus Dev Services is shared.
@@ -99,5 +105,21 @@ public class KafkaDevServicesBuildTimeConfig {
      */
     @ConfigItem
     public RedPandaBuildTimeConfig redpanda;
+
+    public enum Provider {
+        REDPANDA("docker.io/vectorized/redpanda:v22.3.4"),
+        STRIMZI("quay.io/strimzi-test-container/test-container:latest-kafka-3.2.1"),
+        KAFKA_NATIVE("quay.io/ogunalp/kafka-native:latest");
+
+        String defaultImageName;
+
+        Provider(String imageName) {
+            this.defaultImageName = imageName;
+        }
+
+        public String getDefaultImageName() {
+            return defaultImageName;
+        }
+    }
 
 }

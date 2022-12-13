@@ -7,14 +7,15 @@ import java.util.Map;
 
 import org.testcontainers.utility.MountableFile;
 
+import com.ozangunalp.kafka.test.container.KafkaNativeContainer;
+
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import io.strimzi.test.container.StrimziKafkaContainer;
 
 public class KafkaSASLTestResource implements QuarkusTestResourceLifecycleManager {
 
-    private final StrimziKafkaContainer kafka = new StrimziKafkaContainer()
+    private final KafkaNativeContainer kafka = new KafkaNativeContainer()
             .withServerProperties(MountableFile.forClasspathResource("server.properties"))
-            .withBootstrapServers(
+            .withAdvertisedListeners(
                     container -> String.format("SASL_PLAINTEXT://%s:%s", container.getHost(),
                             container.getMappedPort(KAFKA_PORT)));
 

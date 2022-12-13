@@ -8,13 +8,14 @@ import java.util.Map;
 
 import org.testcontainers.utility.MountableFile;
 
+import com.ozangunalp.kafka.test.container.KafkaNativeContainer;
+
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import io.strimzi.test.container.StrimziKafkaContainer;
 
 public class KafkaSSLTestResource implements QuarkusTestResourceLifecycleManager {
 
-    private final StrimziKafkaContainer kafka = new StrimziKafkaContainer()
-            .withBootstrapServers(c -> String.format("SSL://%s:%s", c.getHost(), c.getMappedPort(KAFKA_PORT)))
+    private final KafkaNativeContainer kafka = new KafkaNativeContainer()
+            .withAdvertisedListeners(c -> String.format("SSL://%s:%s", c.getHost(), c.getMappedPort(KAFKA_PORT)))
             .withServerProperties(MountableFile.forClasspathResource("server.properties"))
             .withCopyFileToContainer(MountableFile.forClasspathResource("kafka-keystore.p12"),
                     "/opt/kafka/config/kafka-keystore.p12")

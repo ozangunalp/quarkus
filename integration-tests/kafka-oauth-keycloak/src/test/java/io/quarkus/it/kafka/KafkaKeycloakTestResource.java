@@ -6,16 +6,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
+import org.testcontainers.containers.Network;
 import org.testcontainers.utility.MountableFile;
+
+import com.ozangunalp.kafka.test.container.KafkaNativeContainer;
 
 import io.quarkus.it.kafka.containers.KeycloakContainer;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import io.strimzi.test.container.StrimziKafkaContainer;
 
 public class KafkaKeycloakTestResource implements QuarkusTestResourceLifecycleManager {
 
     private static final Logger log = Logger.getLogger(KafkaKeycloakTestResource.class);
-    private StrimziKafkaContainer kafka;
+    private KafkaNativeContainer kafka;
     private KeycloakContainer keycloak;
 
     @Override
@@ -30,12 +32,11 @@ public class KafkaKeycloakTestResource implements QuarkusTestResourceLifecycleMa
         keycloak.createHostsFile();
 
         //Start kafka container
-        this.kafka = new StrimziKafkaContainer("quay.io/strimzi/kafka:latest-kafka-3.0.0")
-                .withBrokerId(1)
-                .withKafkaConfigurationMap(Map.of("listener.security.protocol.map", "JWT:SASL_PLAINTEXT,BROKER1:PLAINTEXT"))
+        this.kafka = new KafkaNativeContainer()
+                .withNetwork(Network.SHARED)
                 .withNetworkAliases("kafka")
                 .withServerProperties(MountableFile.forClasspathResource("kafkaServer.properties"))
-                .withBootstrapServers(
+                .withAdvertisedListeners(
                         c -> String.format("JWT://%s:%s", c.getHost(), c.getMappedPort(KAFKA_PORT)));
         this.kafka.start();
         log.info(this.kafka.getLogs());

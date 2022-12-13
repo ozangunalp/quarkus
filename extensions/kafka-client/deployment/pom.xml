@@ -63,6 +63,10 @@
             <artifactId>strimzi-test-container</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.ozangunalp</groupId>
+            <artifactId>kafka-native-test-container</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit4-mock</artifactId>
         </dependency>

@@ -7,17 +7,19 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.Network;
 import org.testcontainers.utility.MountableFile;
+
+import com.ozangunalp.kafka.test.container.KafkaNativeContainer;
 
 import io.quarkus.it.kafka.containers.KerberosContainer;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import io.strimzi.test.container.StrimziKafkaContainer;
 
 public class KafkaSaslTestResource implements QuarkusTestResourceLifecycleManager {
 
     private final Logger log = Logger.getLogger(KafkaSaslTestResource.class);
 
-    private StrimziKafkaContainer kafka;
+    private KafkaNativeContainer kafka;
     private KerberosContainer kerberos;
 
     @Override
@@ -34,8 +36,11 @@ public class KafkaSaslTestResource implements QuarkusTestResourceLifecycleManage
         properties.put("java.security.krb5.conf", "src/test/resources/krb5.conf");
 
         //Start kafka container
-        kafka = new StrimziKafkaContainer()
-                .withBootstrapServers(
+        kafka = new KafkaNativeContainer()
+                .withArgs("-Dquarkus.log.level=FINE")
+                .withNetwork(Network.SHARED)
+                .withNetworkAliases("kafka")
+                .withAdvertisedListeners(
                         c -> String.format("SASL_PLAINTEXT://%s:%s", c.getHost(), c.getMappedPort(KAFKA_PORT)))
                 .withPort(KAFKA_PORT)
                 .withServerProperties(MountableFile.forClasspathResource("kafkaServer.properties"))
