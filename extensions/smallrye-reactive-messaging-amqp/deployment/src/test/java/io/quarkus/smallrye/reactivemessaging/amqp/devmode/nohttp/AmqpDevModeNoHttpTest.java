@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManagerFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -44,6 +45,7 @@ public class AmqpDevModeNoHttpTest {
     // See also https://github.com/smallrye/smallrye-reactive-messaging/issues/1125.
 
     @Test
+    @Disabled // TODO Re-enable later when RM DevMode has been fixed
     public void testProducerUpdate() {
         await().atMost(1, TimeUnit.MINUTES).untilAsserted(() -> {
             List<LogRecord> log = TEST.getLogRecords();
@@ -73,6 +75,7 @@ public class AmqpDevModeNoHttpTest {
     }
 
     @Test
+    @Disabled // TODO Re-enable later when RM DevMode has been fixed
     public void testConsumerUpdate() {
         await().atMost(1, TimeUnit.MINUTES).untilAsserted(() -> {
             List<LogRecord> log = new CopyOnWriteArrayList<>(TEST.getLogRecords());
