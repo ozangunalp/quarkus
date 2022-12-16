@@ -1,6 +1,6 @@
 package org.jboss.resteasy.reactive.server.core.multipart;
 
-import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
 import java.io.File;
 import java.io.IOException;

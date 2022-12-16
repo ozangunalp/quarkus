@@ -1,6 +1,7 @@
 package io.quarkus.smallrye.reactivemessaging.runtime.devmode;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Priority;
@@ -50,7 +51,7 @@ public class DevModeSupportConnectorFactoryInterceptor {
             });
         }
         if (ctx.getMethod().getName().equals("getPublisher")) {
-            Publisher<Message<?>> result = (Publisher<Message<?>>) ctx.proceed();
+            Flow.Publisher<Message<?>> result = (Flow.Publisher<Message<?>>) ctx.proceed();
             return Multi.createFrom().publisher(result)
                     .onItem().transformToUniAndConcatenate(msg -> Uni.createFrom().emitter(e -> {
                         onMessage.get().whenComplete((restarted, error) -> {
