@@ -59,6 +59,9 @@ public final class ReactiveMessagingDotNames {
     static final DotName OUTGOING_CONNECTOR_FACTORY = DotName.createSimple(OutgoingConnectorFactory.class.getName());
     static final DotName OUTBOUND_CONNECTOR = DotName.createSimple(OutboundConnector.class.getName());
 
+    static final DotName INBOUND_CONNECTOR = DotName.createSimple(InboundConnector.class.getName());
+    static final DotName OUTBOUND_CONNECTOR = DotName.createSimple(OutboundConnector.class.getName());
+
     static final DotName SMALLRYE_BLOCKING = DotName.createSimple(io.smallrye.common.annotation.Blocking.class.getName());
 
     // Do not directly reference the MetricDecorator (due to its direct references to MP Metrics, which may not be present)

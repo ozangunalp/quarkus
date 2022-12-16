@@ -51,6 +51,7 @@
         <microprofile-rest-client.version>3.0</microprofile-rest-client.version>
         <microprofile-jwt.version>2.0</microprofile-jwt.version>
         <microprofile-lra.version>2.0-RC1</microprofile-lra.version>
+        <microprofile-openapi.version>2.0.1</microprofile-openapi.version>
         <smallrye-common.version>2.0.0</smallrye-common.version>
         <smallrye-config.version>3.1.0</smallrye-config.version>
         <smallrye-health.version>4.0.1</smallrye-health.version>
@@ -103,7 +104,7 @@
         <jboss-transaction-api_1.2_spec.version>1.1.1.Final</jboss-transaction-api_1.2_spec.version>
         <agroal.version>2.0</agroal.version>
         <jboss-transaction-spi.version>7.6.0.Final</jboss-transaction-spi.version>
-        <elasticsearch-opensource-components.version>8.5.0</elasticsearch-opensource-components.version>
+        <elasticsearch-opensource-components.version>8.5.3</elasticsearch-opensource-components.version>
         <!-- for the now proprietary components of Elasticsearch, we use the last Open Source version -->
         <elasticsearch-proprietary-components-keeping-old-opensource-version.version>7.10.2</elasticsearch-proprietary-components-keeping-old-opensource-version.version>
         <rxjava.version>2.2.21</rxjava.version>
@@ -116,9 +117,9 @@
         <wildfly-client-config.version>1.0.1.Final</wildfly-client-config.version>
         <wildfly-elytron.version>2.0.0.Final</wildfly-elytron.version>
         <jboss-threads.version>3.4.3.Final</jboss-threads.version>
-        <vertx.version>4.3.5</vertx.version>
+        <vertx.version>4.3.6</vertx.version>
 
-        <httpclient.version>4.5.13</httpclient.version>
+        <httpclient.version>4.5.14</httpclient.version>
         <httpcore.version>4.4.16</httpcore.version>
         <httpasync.version>4.1.5</httpasync.version>
         <cronutils.version>9.2.0</cronutils.version>
@@ -137,7 +138,7 @@
         <junit.jupiter.version>5.9.1</junit.jupiter.version>
         <junit-pioneer.version>1.5.0</junit-pioneer.version>
         <testng.version>7.4.0</testng.version>
-        <infinispan.version>14.0.2.Final</infinispan.version>
+        <infinispan.version>14.0.3.Final</infinispan.version>
         <infinispan.protostream.version>4.5.0.Final</infinispan.protostream.version>
         <caffeine.version>3.1.1</caffeine.version>
         <netty.version>4.1.85.Final</netty.version>
@@ -163,12 +164,12 @@
         <maven-invoker.version>3.2.0</maven-invoker.version>
         <awaitility.version>4.2.0</awaitility.version>
         <jboss-logmanager.version>1.1.1</jboss-logmanager.version>
-        <flyway.version>9.8.3</flyway.version>
+        <flyway.version>9.10.0</flyway.version>
         <yasson.version>3.0.2</yasson.version>
-        <liquibase.version>4.17.2</liquibase.version>
+        <liquibase.version>4.18.0</liquibase.version>
         <snakeyaml.version>1.33</snakeyaml.version>
         <osgi.version>6.0.0</osgi.version>
-        <mongo-client.version>4.8.0</mongo-client.version>
+        <mongo-client.version>4.8.1</mongo-client.version>
         <mongo-crypt.version>1.6.1</mongo-crypt.version>
         <proton-j.version>0.34.0</proton-j.version>
         <javaparser.version>3.24.2</javaparser.version>
@@ -4223,6 +4224,11 @@
                         <artifactId>org.osgi.annotation.versioning</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.microprofile.openapi</groupId>
+                <artifactId>microprofile-openapi-api</artifactId>
+                <version>${microprofile-openapi.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.expressly</groupId>

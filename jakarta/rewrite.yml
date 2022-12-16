@@ -613,8 +613,8 @@ recipeList:
       key: smallrye-metrics.version
       newValue: '4.0.0'
   - org.openrewrite.maven.ChangePropertyValue:
-      key: smallrye-open-api.version
-      newValue: '3.0.1'
+      key: microprofile-openapi.version
+      newValue: '3.0'
   - org.openrewrite.maven.ChangePropertyValue:
       key: microprofile-opentracing-api.version
       newValue: '3.0'
@@ -623,7 +623,7 @@ recipeList:
       newValue: '3.0.0'
   - org.openrewrite.maven.ChangePropertyValue:
       key: smallrye-reactive-messaging.version
-      newValue: '4.1.0'
+      newValue: '4.1.1'
   - org.openrewrite.maven.ChangePropertyValue:
       key: microprofile-rest-client.version
       newValue: '3.0'
