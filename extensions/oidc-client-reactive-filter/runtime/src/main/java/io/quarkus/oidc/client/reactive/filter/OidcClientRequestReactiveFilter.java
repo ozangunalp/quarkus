@@ -1,7 +1,7 @@
 package io.quarkus.oidc.client.reactive.filter;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
+import jakarta.annotation.Priority;
+import jakarta.ws.rs.Priorities;
 
 import io.quarkus.oidc.client.reactive.filter.runtime.AbstractOidcClientRequestReactiveFilter;
 
