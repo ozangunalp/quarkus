@@ -2,6 +2,7 @@ package io.quarkus.smallrye.reactivemessaging.deployment;
 
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static io.quarkus.smallrye.reactivemessaging.deployment.ReactiveMessagingDotNames.BLOCKING;
+import static io.quarkus.smallrye.reactivemessaging.deployment.ReactiveMessagingDotNames.RUN_ON_VIRTUAL_THREAD;
 import static io.quarkus.smallrye.reactivemessaging.deployment.ReactiveMessagingDotNames.SMALLRYE_BLOCKING;
 import static io.quarkus.smallrye.reactivemessaging.deployment.ReactiveMessagingDotNames.TRANSACTIONAL;
 
@@ -240,9 +241,12 @@ public class SmallRyeReactiveMessagingProcessor {
             BeanInfo bean = mediatorMethod.getBean();
 
             if (methodInfo.hasAnnotation(BLOCKING) || methodInfo.hasAnnotation(SMALLRYE_BLOCKING)
+                    || methodInfo.hasAnnotation(RUN_ON_VIRTUAL_THREAD)
                     || methodInfo.hasAnnotation(TRANSACTIONAL)) {
                 // Just in case both annotation are used, use @Blocking value.
-                String poolName = Blocking.DEFAULT_WORKER_POOL;
+                String poolName = methodInfo.hasAnnotation(RUN_ON_VIRTUAL_THREAD)
+                        ? QuarkusWorkerPoolRegistry.DEFAULT_VIRTUAL_THREAD_WORKER
+                        : Blocking.DEFAULT_WORKER_POOL;
 
                 // If the method is annotated with the SmallRye Reactive Messaging @Blocking, extract the worker pool name if any
                 if (methodInfo.hasAnnotation(ReactiveMessagingDotNames.BLOCKING)) {
@@ -250,7 +254,7 @@ public class SmallRyeReactiveMessagingProcessor {
                     poolName = blocking.value() == null ? Blocking.DEFAULT_WORKER_POOL : blocking.value().asString();
                 }
                 workerConfigurations.add(new WorkerConfiguration(methodInfo.declaringClass().toString(),
-                        methodInfo.name(), poolName));
+                        methodInfo.name(), poolName, methodInfo.hasAnnotation(RUN_ON_VIRTUAL_THREAD)));
             }
 
             try {
