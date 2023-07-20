@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class KafkaMessageCreateRequest {
 
     private String topic;
+    private String type;
     private Integer partition;
     private String value;
     private String key;
@@ -16,8 +17,10 @@ public class KafkaMessageCreateRequest {
     public KafkaMessageCreateRequest() {
     }
 
-    public KafkaMessageCreateRequest(String topic, Integer partition, String value, String key, Map<String, String> headers) {
+    public KafkaMessageCreateRequest(String topic, String type, Integer partition, String value, String key,
+            Map<String, String> headers) {
         this.topic = topic;
+        this.type = type;
         this.partition = partition;
         this.value = value;
         this.key = key;
@@ -26,6 +29,10 @@ public class KafkaMessageCreateRequest {
 
     public String getTopic() {
         return topic;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public Integer getPartition() {

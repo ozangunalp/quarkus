@@ -56,7 +56,7 @@ export class QwcKafkaMessages extends QwcHotReloadElement {
         extensionName: {type: String}, // TODO: Add 'pane' concept in router to register internal extension pages.
         _messages: {state: false, type: Array},
         _createMessageDialogOpened: {state: true},
-        _messagesDetailOpenedItem: {state: false, type: Array}
+        _messagesDetailOpenedItem: {state: true, type: Array}
     };
 
     constructor() { 
@@ -121,7 +121,7 @@ export class QwcKafkaMessages extends QwcHotReloadElement {
                             const prop = event.detail.value;
                             this._messagesDetailOpenedItem = prop ? [prop] : [];
                         }}"
-                        ${gridRowDetailsRenderer(this._messagesDetailRenderer, [])}>
+                        ${gridRowDetailsRenderer(this._messagesDetailRenderer, [this._messagesDetailOpenedItem])}>
                     <vaadin-grid-sort-column auto-width
                         path="offset"
                         header="Offset"
@@ -165,10 +165,10 @@ export class QwcKafkaMessages extends QwcHotReloadElement {
         return html`<vaadin-split-layout>
                         <master-content class="detail-block">
                             <span>Message value:</span>
-                            <div class="code-block">    
+                            <div class="code-block">
                                 <qui-code-block
                                     mode='json'
-                                    content='${message.value}'>
+                                    content="${message.value}">
                                 </qui-code-block>
                             </div>
                         </master-content>

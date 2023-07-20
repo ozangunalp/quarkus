@@ -58,14 +58,14 @@ public class KafkaJsonRPCService {
         return kafkaUiUtils.getMessages(request);
     }
 
-    public KafkaMessagePage createMessage(String topicName, Integer partition, String key, String value,
+    public KafkaMessagePage createMessage(String topicName, String type, Integer partition, String key, String value,
             Map<String, String> headers)
             throws ExecutionException, InterruptedException {
 
         if (partition < 0)
             partition = null;
 
-        KafkaMessageCreateRequest request = new KafkaMessageCreateRequest(topicName, partition, value, key, headers);
+        KafkaMessageCreateRequest request = new KafkaMessageCreateRequest(topicName, type, partition, value, key, headers);
 
         kafkaUiUtils.createMessage(request);
 

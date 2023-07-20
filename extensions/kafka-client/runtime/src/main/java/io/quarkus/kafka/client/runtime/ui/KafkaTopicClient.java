@@ -249,9 +249,15 @@ public class KafkaTopicClient {
     }
 
     public void createMessage(KafkaMessageCreateRequest request) {
-        var record = new ProducerRecord<>(request.getTopic(), request.getPartition(), Bytes.wrap(request.getKey().getBytes()),
-                Bytes.wrap(request.getValue().getBytes()));
-
+        // TODO handle other types: string, int, double, JSON?,
+        ProducerRecord<Bytes, Bytes> record;
+        if (request.getType().equals("none")) {
+            record = new ProducerRecord<>(request.getTopic(), request.getPartition(), Bytes.wrap(request.getKey().getBytes()),
+                    null);
+        } else {
+            record = new ProducerRecord<>(request.getTopic(), request.getPartition(), Bytes.wrap(request.getKey().getBytes()),
+                    Bytes.wrap(request.getValue().getBytes()));
+        }
         Optional.ofNullable(request.getHeaders())
                 .orElseGet(Collections::emptyMap)
                 .forEach((key, value) -> record.headers().add(

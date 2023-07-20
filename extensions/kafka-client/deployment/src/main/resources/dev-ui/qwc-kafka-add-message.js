@@ -26,7 +26,7 @@ export class QwcKafkaAddMessage extends LitElement {
         extensionName: {type: String}, // TODO: Add 'pane' concept in router to register internal extension pages.
         _targetPartitions: {state: false},
         _types: {state: false},
-        _newMessage: {state: true},
+        _newMessage: {state: true, type: Object},
         _newMessageHeaders: {state: true, type: Array},
     };
 
@@ -62,9 +62,10 @@ export class QwcKafkaAddMessage extends LitElement {
         this._newMessage = new Object();
         this._newMessage.partition = 'any';
         this._newMessage.type = 'text';
-        this._newMessage.key = null;
-        this._newMessage.value = null;
+        this._newMessage.key = '';
+        this._newMessage.value = '';
         this._newMessageHeaders = null;
+        this.requestUpdate();
     }
 
     _cancel(){
@@ -104,16 +105,15 @@ export class QwcKafkaAddMessage extends LitElement {
                             placeholder="my-awesome-key"
                             value="${this._newMessage.key ?? ''}"
                             @value-changed="${(e) => this._createMessageKeyChanged(e)}"
-                            required
                             clear-button-visible>
                         </vaadin-text-field>
                         
                         <vaadin-text-area style="min-height: 160px;"
+                                    ?disabled="${this._newMessage.type === 'none'}"
                                     colspan="2"
                                     label="Value"
                                     value="${this._newMessage.value ?? ''}"
-                                    @value-changed="${(e) => this._createMessageValueChanged(e)}"
-                                    required>
+                                    @value-changed="${(e) => this._createMessageValueChanged(e)}">
                         </vaadin-text-area>
                         
                         <div colspan="2">
@@ -178,6 +178,7 @@ export class QwcKafkaAddMessage extends LitElement {
                         partition: Number(this._newMessage.partition), 
                         key:this._newMessage.key,
                         value:this._newMessage.value,
+                        type:this._newMessage.type,
                         headers: headers
                     }).then(jsonRpcResponse => {
                         this._reset();
@@ -197,18 +198,22 @@ export class QwcKafkaAddMessage extends LitElement {
 
     _createMessagePartitionChanged(e){
         this._newMessage.partition = e.detail.value;
+        this.requestUpdate();
     }
 
     _createMessageTypeChanged(e){
         this._newMessage.type = e.detail.value.trim();
+        this.requestUpdate();
     }
 
     _createMessageKeyChanged(e){
         this._newMessage.key = e.detail.value.trim();
+        this.requestUpdate();
     }
 
     _createMessageValueChanged(e){
         this._newMessage.value = e.detail.value.trim();
+        this.requestUpdate();
     }
 
     _newMessageAddHeader(e){
@@ -231,6 +236,7 @@ export class QwcKafkaAddMessage extends LitElement {
             }
         }
         this._addToHeaders(h);
+        this.requestUpdate();
     }
 
     _addToHeaders(h){

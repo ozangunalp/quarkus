@@ -73,7 +73,8 @@ export class QwcKafkaAddTopic extends LitElement {
         this._newTopic = new Object();
         this._newTopic.name = '';
         this._newTopic.partitions = 1;
-        this._newTopic.replications = 1;        
+        this._newTopic.replications = 1;
+        this.requestUpdate();
     }
 
     _cancel(){
@@ -110,14 +111,17 @@ export class QwcKafkaAddTopic extends LitElement {
     
     _nameChanged(e){
         this._newTopic.name = e.detail.value.trim();
+        this.requestUpdate();
     }
     
     _partitionsChanged(e){
         this._newTopic.partitions = e.detail.value;
+        this.requestUpdate();
     }
     
     _replicationsChanged(e){
         this._newTopic.replications = e.detail.value;
+        this.requestUpdate();
     }
 }
 
