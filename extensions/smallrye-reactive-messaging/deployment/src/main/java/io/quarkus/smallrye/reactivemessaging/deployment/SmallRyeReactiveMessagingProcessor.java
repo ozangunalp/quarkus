@@ -71,6 +71,7 @@ import io.quarkus.smallrye.reactivemessaging.runtime.DuplicatedContextConnectorF
 import io.quarkus.smallrye.reactivemessaging.runtime.QuarkusMediatorConfiguration;
 import io.quarkus.smallrye.reactivemessaging.runtime.QuarkusWorkerPoolRegistry;
 import io.quarkus.smallrye.reactivemessaging.runtime.ReactiveMessagingConfiguration;
+import io.quarkus.smallrye.reactivemessaging.runtime.RequestScopedDecorator;
 import io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingLifecycle;
 import io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingRecorder;
 import io.quarkus.smallrye.reactivemessaging.runtime.SmallRyeReactiveMessagingRecorder.SmallRyeReactiveMessagingContext;
@@ -106,11 +107,14 @@ public class SmallRyeReactiveMessagingProcessor {
     }
 
     @BuildStep
-    AdditionalBeanBuildItem beans() {
+    void beans(BuildProducer<AdditionalBeanBuildItem> additionalBean, ReactiveMessagingBuildTimeConfig buildTimeConfig) {
         // We add the connector and channel qualifiers to make them part of the index.
-        return new AdditionalBeanBuildItem(SmallRyeReactiveMessagingLifecycle.class, Connector.class,
+        additionalBean.produce(new AdditionalBeanBuildItem(SmallRyeReactiveMessagingLifecycle.class, Connector.class,
                 Channel.class, io.smallrye.reactive.messaging.annotations.Channel.class,
-                QuarkusWorkerPoolRegistry.class);
+                QuarkusWorkerPoolRegistry.class));
+        if (buildTimeConfig.activateRequestScopeEnabled) {
+            additionalBean.produce(new AdditionalBeanBuildItem(RequestScopedDecorator.class));
+        }
     }
 
     @BuildStep
