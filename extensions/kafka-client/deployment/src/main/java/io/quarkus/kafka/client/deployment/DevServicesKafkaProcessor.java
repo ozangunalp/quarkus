@@ -1,5 +1,8 @@
 package io.quarkus.kafka.client.deployment;
 
+import static io.quarkus.devservices.common.ContainerLocator.locateComposeContainerByImage;
+import static io.quarkus.devservices.common.ContainerLocator.locateContainerWithLabels;
+
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +32,7 @@ import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
+import io.quarkus.deployment.builditem.DevServicesComposeProjectBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem.RunningDevService;
 import io.quarkus.deployment.builditem.DevServicesSharedNetworkBuildItem;
@@ -59,9 +63,13 @@ public class DevServicesKafkaProcessor {
      * This allows other applications to discover the running service and use it instead of starting a new instance.
      */
     static final String DEV_SERVICE_LABEL = "quarkus-dev-service-kafka";
+    static final String DEV_SERVICE_LABEL_NEW = "io.quarkus.devservice.kafka";
     static final int KAFKA_PORT = 9092;
 
-    private static final ContainerLocator kafkaContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, KAFKA_PORT);
+    private static final ContainerLocator kafkaContainerLocator = locateContainerWithLabels(KAFKA_PORT,
+            DEV_SERVICE_LABEL, DEV_SERVICE_LABEL_NEW);
+    private static final ContainerLocator composeLocator = locateComposeContainerByImage(KAFKA_PORT,
+            "kafka", "strimzi", "redpanda");
 
     static volatile RunningDevService devService;
     static volatile KafkaDevServiceCfg cfg;
@@ -70,6 +78,7 @@ public class DevServicesKafkaProcessor {
     @BuildStep
     public DevServicesResultBuildItem startKafkaDevService(
             DockerStatusBuildItem dockerStatusBuildItem,
+            DevServicesComposeProjectBuildItem composeProjectBuildItem,
             LaunchModeBuildItem launchMode,
             KafkaBuildTimeConfig kafkaClientBuildTimeConfig,
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
@@ -92,7 +101,7 @@ public class DevServicesKafkaProcessor {
                 (launchMode.isTest() ? "(test) " : "") + "Kafka Dev Services Starting:",
                 consoleInstalledBuildItem, loggingSetupBuildItem);
         try {
-            devService = startKafka(dockerStatusBuildItem, configuration, launchMode,
+            devService = startKafka(dockerStatusBuildItem, composeProjectBuildItem, configuration, launchMode,
                     !devServicesSharedNetworkBuildItem.isEmpty(),
                     devServicesConfig.timeout);
             if (devService == null) {
@@ -193,7 +202,9 @@ public class DevServicesKafkaProcessor {
         }
     }
 
-    private RunningDevService startKafka(DockerStatusBuildItem dockerStatusBuildItem, KafkaDevServiceCfg config,
+    private RunningDevService startKafka(DockerStatusBuildItem dockerStatusBuildItem,
+            DevServicesComposeProjectBuildItem composeProjectBuildItem,
+            KafkaDevServiceCfg config,
             LaunchModeBuildItem launchMode, boolean useSharedNetwork, Optional<Duration> timeout) {
         if (!config.devServicesEnabled) {
             // explicitly disabled
@@ -278,6 +289,8 @@ public class DevServicesKafkaProcessor {
         };
 
         return maybeContainerAddress
+                .or(() -> composeLocator.locateContainer(composeProjectBuildItem.getProject(), useSharedNetwork,
+                        launchMode.getLaunchMode()))
                 .map(containerAddress -> new RunningDevService(Feature.KAFKA_CLIENT.getName(),
                         containerAddress.getId(),
                         null,

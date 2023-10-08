@@ -1,5 +1,8 @@
 package io.quarkus.smallrye.reactivemessaging.amqp.deployment;
 
+import static io.quarkus.devservices.common.ContainerLocator.locateComposeContainerByImage;
+import static io.quarkus.devservices.common.ContainerLocator.locateContainerWithLabels;
+
 import java.io.Closeable;
 import java.time.Duration;
 import java.util.HashMap;
@@ -21,6 +24,7 @@ import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.BuildSteps;
 import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
+import io.quarkus.deployment.builditem.DevServicesComposeProjectBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem.RunningDevService;
 import io.quarkus.deployment.builditem.DevServicesSharedNetworkBuildItem;
@@ -50,11 +54,15 @@ public class AmqpDevServicesProcessor {
      * This allows other applications to discover the running service and use it instead of starting a new instance.
      */
     private static final String DEV_SERVICE_LABEL = "quarkus-dev-service-amqp";
+    private static final String DEV_SERVICE_LABEL_NEW = "io.quarkus.devservices.amqp";
 
     private static final int AMQP_PORT = 5672;
     private static final int AMQP_CONSOLE_PORT = 8161;
 
-    private static final ContainerLocator amqpContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, AMQP_PORT);
+    private static final ContainerLocator amqpContainerLocator = locateContainerWithLabels(AMQP_PORT,
+            DEV_SERVICE_LABEL, DEV_SERVICE_LABEL_NEW);
+    private static final ContainerLocator composeLocator = locateComposeContainerByImage(AMQP_PORT,
+            "amqp", "activemq-artemis", "rabbitmq");
     private static final String AMQP_HOST_PROP = "amqp-host";
     private static final String AMQP_PORT_PROP = "amqp-port";
     private static final String AMQP_MAPPED_PORT_PROP = "amqp-mapped-port";
@@ -71,6 +79,7 @@ public class AmqpDevServicesProcessor {
     @BuildStep
     public DevServicesResultBuildItem startAmqpDevService(
             DockerStatusBuildItem dockerStatusBuildItem,
+            DevServicesComposeProjectBuildItem composeProjectBuildItem,
             LaunchModeBuildItem launchMode,
             AmqpBuildTimeConfig amqpClientBuildTimeConfig,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
@@ -94,7 +103,8 @@ public class AmqpDevServicesProcessor {
                 (launchMode.isTest() ? "(test) " : "") + "AMQP Dev Services Starting:", consoleInstalledBuildItem,
                 loggingSetupBuildItem);
         try {
-            RunningDevService newDevService = startAmqpBroker(dockerStatusBuildItem, configuration, launchMode,
+            RunningDevService newDevService = startAmqpBroker(dockerStatusBuildItem, composeProjectBuildItem, configuration,
+                    launchMode,
                     devServicesConfig.timeout, !devServicesSharedNetworkBuildItem.isEmpty());
             if (newDevService != null) {
                 devService = newDevService;
@@ -154,7 +164,9 @@ public class AmqpDevServicesProcessor {
         }
     }
 
-    private RunningDevService startAmqpBroker(DockerStatusBuildItem dockerStatusBuildItem, AmqpDevServiceCfg config,
+    private RunningDevService startAmqpBroker(DockerStatusBuildItem dockerStatusBuildItem,
+            DevServicesComposeProjectBuildItem composeProjectBuildItem,
+            AmqpDevServiceCfg config,
             LaunchModeBuildItem launchMode, Optional<Duration> timeout, boolean useSharedNetwork) {
         if (!config.devServicesEnabled) {
             // explicitly disabled
@@ -197,6 +209,8 @@ public class AmqpDevServicesProcessor {
         };
 
         return amqpContainerLocator.locateContainer(config.serviceName, config.shared, launchMode.getLaunchMode())
+                .or(() -> composeLocator.locateContainer(composeProjectBuildItem.getProject(), config.shared,
+                        launchMode.getLaunchMode()))
                 .map(containerAddress -> getRunningService(containerAddress.getId(), null, containerAddress.getHost(),
                         containerAddress.getPort(), 0))
                 .orElseGet(defaultAmqpBrokerSupplier);
