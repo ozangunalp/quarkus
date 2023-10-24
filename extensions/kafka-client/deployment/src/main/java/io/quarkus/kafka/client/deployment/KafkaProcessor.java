@@ -337,7 +337,8 @@ public class KafkaProcessor {
         }
 
         reflectiveClass
-                .produce(ReflectiveClassBuildItem.builder("io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler")
+                .produce(ReflectiveClassBuildItem.builder(
+                        "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler")
                         .methods().fields().build());
 
         if (curateOutcomeBuildItem.getApplicationModel().getDependencies().stream().anyMatch(
