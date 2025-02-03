@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.not;
 
 import java.util.concurrent.TimeUnit;
 
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -136,7 +137,8 @@ public class KafkaContextPropagationTest {
     }
 
     protected Matcher<String> assertBodyRequestScopedContextWasNotActive() {
-        return containsString("RequestScoped context was not active");
+        return CoreMatchers.either(containsString("RequestScoped context was not active"))
+                .or(containsString("RequestScoped context not propagated"));
     }
 
     @Test

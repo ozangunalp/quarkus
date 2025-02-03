@@ -70,7 +70,7 @@ import io.quarkus.smallrye.reactivemessaging.deployment.items.ConnectorManagedCh
 import io.quarkus.smallrye.reactivemessaging.deployment.items.InjectedChannelBuildItem;
 import io.quarkus.smallrye.reactivemessaging.deployment.items.InjectedEmitterBuildItem;
 import io.quarkus.smallrye.reactivemessaging.deployment.items.MediatorBuildItem;
-import io.quarkus.smallrye.reactivemessaging.runtime.ContextClearedDecorator;
+import io.quarkus.smallrye.reactivemessaging.runtime.ConnectorContextPropagationDecorator;
 import io.quarkus.smallrye.reactivemessaging.runtime.DuplicatedContextConnectorFactory;
 import io.quarkus.smallrye.reactivemessaging.runtime.DuplicatedContextConnectorFactoryInterceptor;
 import io.quarkus.smallrye.reactivemessaging.runtime.HealthCenterFilter;
@@ -118,7 +118,7 @@ public class SmallRyeReactiveMessagingProcessor {
         // We add the connector and channel qualifiers to make them part of the index.
         additionalBean.produce(new AdditionalBeanBuildItem(SmallRyeReactiveMessagingLifecycle.class, Connector.class,
                 Channel.class, io.smallrye.reactive.messaging.annotations.Channel.class,
-                QuarkusWorkerPoolRegistry.class, ContextClearedDecorator.class));
+                QuarkusWorkerPoolRegistry.class, ConnectorContextPropagationDecorator.class));
         if (buildTimeConfig.activateRequestScopeEnabled()) {
             additionalBean.produce(new AdditionalBeanBuildItem(RequestScopedDecorator.class));
         }

@@ -28,10 +28,12 @@ public class FlowerReceivers {
     void process(String id) {
         Context ctx = Vertx.currentContext();
         assert Context.isOnEventLoopThread();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         logger.infof("Greeting, %s", reqBean.getName());
-        assert Objects.equals(id, reqBean.getId());
+        if (!Objects.equals(id, reqBean.getId())) {
+            throw new IllegalStateException("RequestScoped context not propagated");
+        }
     }
 
     @Blocking
@@ -39,10 +41,12 @@ public class FlowerReceivers {
     void processBlocking(String id) {
         Context ctx = Vertx.currentContext();
         assert Context.isOnWorkerThread();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         logger.infof("Greeting, %s", reqBean.getName());
-        assert Objects.equals(id, reqBean.getId());
+        if (!Objects.equals(id, reqBean.getId())) {
+            throw new IllegalStateException("RequestScoped context not propagated");
+        }
     }
 
     @Blocking("named-pool")
@@ -50,10 +54,12 @@ public class FlowerReceivers {
     void processBlockingNamed(String id) {
         Context ctx = Vertx.currentContext();
         assert Context.isOnWorkerThread();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         logger.infof("Greeting, %s", reqBean.getName());
-        assert Objects.equals(id, reqBean.getId());
+        if (!Objects.equals(id, reqBean.getId())) {
+            throw new IllegalStateException("RequestScoped context not propagated");
+        }
     }
 
     @RunOnVirtualThread
@@ -62,10 +68,12 @@ public class FlowerReceivers {
         Context ctx = Vertx.currentContext();
         VirtualThreadsAssertions.assertThatItRunsOnVirtualThread();
         VirtualThreadsAssertions.assertThatItRunsOnADuplicatedContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         logger.infof("Greeting, %s", reqBean.getName());
-        assert Objects.equals(id, reqBean.getId());
+        if (!Objects.equals(id, reqBean.getId())) {
+            throw new IllegalStateException("RequestScoped context not propagated");
+        }
     }
 
 }

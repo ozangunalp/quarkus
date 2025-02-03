@@ -1,23 +1,29 @@
 package io.quarkus.smallrye.reactivemessaging.runtime;
 
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.reactive.messaging.PublisherDecorator;
+import io.smallrye.reactive.messaging.SubscriberDecorator;
 
 @ApplicationScoped
-public class ContextClearedDecorator implements PublisherDecorator {
+public class ConnectorContextPropagationDecorator implements PublisherDecorator, SubscriberDecorator {
 
     private final ThreadContext tc;
 
-    public ContextClearedDecorator() {
+    @Inject
+    public ConnectorContextPropagationDecorator(
+            @ConfigProperty(name = "quarkus.messaging.connector-context-propagation") Optional<List<String>> propagation) {
         tc = ThreadContext.builder()
-                .propagated(ThreadContext.NONE)
+                .propagated(propagation.map(l -> l.toArray(String[]::new)).orElse(ThreadContext.NONE))
                 .cleared(ThreadContext.ALL_REMAINING)
                 .build();
     }

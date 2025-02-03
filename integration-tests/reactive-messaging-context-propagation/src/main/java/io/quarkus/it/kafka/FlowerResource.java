@@ -39,7 +39,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public Uni<Void> uniEventLoop(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         return emitter.send(reqBean.getId());
@@ -51,7 +51,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public Uni<Void> uniBlocking(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         return emitterBlocking.send(reqBean.getId());
@@ -63,7 +63,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public Uni<Void> uniBlockingNamed(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         return emitterBlockingNamed.send(reqBean.getId());
@@ -75,7 +75,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public Uni<Void> uniVT(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         return emitterVT.send(reqBean.getId());
@@ -87,7 +87,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public void eventLoop(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         emitter.sendAndAwait(reqBean.getId());
@@ -99,7 +99,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public void blocking(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         emitterBlocking.sendAndAwait(reqBean.getId());
@@ -111,7 +111,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public void blockingNamed(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         emitterBlockingNamed.sendAndAwait(reqBean.getId());
@@ -123,7 +123,7 @@ public class FlowerResource {
     @CurrentThreadContext(propagated = {})
     public void vt(String body) {
         Context ctx = Vertx.currentContext();
-        Log.info(ctx + "[" + ctx.getClass() + "]");
+        Log.info(ctx.hashCode() + " " + ctx);
         Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         reqBean.setName(body != null ? body.toUpperCase() : body);
         emitterVT.sendAndAwait(reqBean.getId());

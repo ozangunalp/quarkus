@@ -3,6 +3,7 @@ package io.quarkus.it.kafka;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -12,6 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
+import io.quarkus.logging.Log;
 import io.smallrye.reactive.messaging.MutinyEmitter;
 
 @Path("/flowers")
@@ -22,10 +24,15 @@ public class FlowerProducer {
     @Channel("flowers-out")
     MutinyEmitter<String> emitter;
 
+    @Inject
+    RequestBean reqBean;
+
     @POST
     @Path("/produce")
     @Consumes(MediaType.TEXT_PLAIN)
     public void produce(String flower) {
+        reqBean.setName(flower);
+        Log.infof("bean: %s, id: %s", reqBean, reqBean.getId());
         emitter.sendAndAwait(flower);
     }
 
