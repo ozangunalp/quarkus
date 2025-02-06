@@ -5,14 +5,12 @@ import java.util.Objects;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import org.eclipse.microprofile.context.ThreadContext;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import io.quarkus.logging.Log;
 import io.quarkus.test.vertx.VirtualThreadsAssertions;
 import io.smallrye.common.annotation.RunOnVirtualThread;
-import io.smallrye.context.api.CurrentThreadContext;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -27,7 +25,6 @@ public class FlowersContextualReceivers {
     Logger logger;
 
     @Incoming("contextual-flower")
-    @CurrentThreadContext(propagated = {}, cleared = ThreadContext.ALL_REMAINING)
     void processContextual(String id) {
         Context ctx = Vertx.currentContext();
         Log.info(ctx + "[" + ctx.getClass() + "]");
@@ -38,7 +35,6 @@ public class FlowersContextualReceivers {
 
     @Blocking
     @Incoming("contextual-flower-blocking")
-    @CurrentThreadContext(propagated = {})
     void processContextualBlocking(String id) {
         Context ctx = Vertx.currentContext();
         assert Context.isOnWorkerThread();

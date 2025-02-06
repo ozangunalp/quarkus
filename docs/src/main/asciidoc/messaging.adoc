@@ -650,16 +650,24 @@ Mutiny, which is the foundation of reactive programming in Quarkus, is integrate
 This integration enables automatic capturing and restoring of context across asynchronous boundaries.
 To learn more about context propagation in Quarkus and Mutiny, refer to the xref:context-propagation.adoc[Context Propagation] guide.
 
-However, Quarkus Messaging needs to coordinate multiple asynchronous boundaries.
-This is why the default context propagation can result in unexpected behavior in some cases.
-
 To ensure consistent behavior, Quarkus Messaging disables the propagation of any context during message dispatching through inbound or outbound connectors.
 This means that context captured through Emitters won't be propagated to the outgoing channel, and incoming channels won't dispatch messages by activating a context (e.g. the request context).
+This behaviour can be configured using `quarkus.messaging.connector-context-propagation` configuration property, by listing the context types to propagate.
+For example `quarkus.messaging.connector-context-propagation=CDI` will only propagate the CDI context.
 
 Internal channels however do propagate the context, as they are part of the same application and the context is not lost.
 
 For example, you might want to propagate the caller context from an incoming HTTP request to the message processing stage.
 For emitters, it is recommended to use the `MutinyEmitter`, as it exposes methods such as `sendAndAwait` that makes sure to wait until a message processing is terminated.
+
+[WARNING]
+====
+The execution context to which the RequestScoped context is bound, in the previous example the REST call, controls the lifecycle of the context.
+This means that when the REST call is completed the RequestScoped context is destroyed.
+Therefore, you need to make sure that your processing or message dispatch is completed before the REST call completes.
+
+For more information check the xref:context-propagation.adoc#context-propagation-for-cdi[Context Propagation] guide.
+====
 
 For example, let `RequestScopedBean` a request-scoped bean, `MutinyEmitter` can be used to dispatch messages locally through the internal channel `app`:
 
@@ -726,6 +734,26 @@ public class Processor {
 
 }
 ----
+
+[TIP]
+====
+You can use the context propagation annotation `@CurrentThreadContext` to configure the context propagation for a specific method.
+Using an emitter this annotation needs to be present on the propagator method, i.e. the caller, not the processing method.
+
+The following example shows how to avoid propagating any context to the message processing stage:
+
+[source, java]
+----
+    @POST
+    @Path("/send")
+    @CurrentThreadContext(propagated = {})
+    public void send(String message) {
+        requestScopedBean.setValue("Hello");
+        emitter.sendAndAwait(message);
+    }
+----
+
+====
 
 === Request Context Activation
 
