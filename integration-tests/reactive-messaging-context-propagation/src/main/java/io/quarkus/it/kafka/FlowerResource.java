@@ -9,9 +9,9 @@ import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
 import io.quarkus.logging.Log;
+import io.quarkus.smallrye.reactivemessaging.runtime.ContextualEmitter;
 import io.smallrye.context.api.CurrentThreadContext;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.reactive.messaging.MutinyEmitter;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 
@@ -19,16 +19,16 @@ import io.vertx.core.Vertx;
 public class FlowerResource {
 
     @Channel("flower")
-    MutinyEmitter<String> emitter;
+    ContextualEmitter<String> emitter;
 
     @Channel("flower-blocking")
-    MutinyEmitter<String> emitterBlocking;
+    ContextualEmitter<String> emitterBlocking;
 
     @Channel("flower-blocking-named")
-    MutinyEmitter<String> emitterBlockingNamed;
+    ContextualEmitter<String> emitterBlockingNamed;
 
     @Channel("flower-virtual-thread")
-    MutinyEmitter<String> emitterVT;
+    ContextualEmitter<String> emitterVT;
 
     @Inject
     RequestBean reqBean;

@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.not;
 
 import java.util.concurrent.TimeUnit;
 
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,11 +28,23 @@ public class KafkaContextPropagationTest {
             given().body("rose").post("/flowers").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
         }
 
         @Test
         void testNonBlockingUni() {
             given().body("rose").post("/flowers/uni").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers/uni").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers/uni").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
         }
@@ -43,11 +54,23 @@ public class KafkaContextPropagationTest {
             given().body("rose").post("/flowers/blocking").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers/blocking").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers/blocking").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
         }
 
         @Test
         void testBlockingUni() {
             given().body("rose").post("/flowers/uni/blocking").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers/uni/blocking").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers/uni/blocking").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
         }
@@ -57,11 +80,23 @@ public class KafkaContextPropagationTest {
             given().body("rose").post("/flowers/blocking-named").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers/blocking-named").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers/blocking-named").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
         }
 
         @Test
         void testBlockingNamedUni() {
             given().body("rose").post("/flowers/uni/blocking-named").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers/uni/blocking-named").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers/uni/blocking-named").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
         }
@@ -72,12 +107,24 @@ public class KafkaContextPropagationTest {
             given().body("rose").post("/flowers/virtual-thread").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers/virtual-thread").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers/virtual-thread").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
         }
 
         @Test
         @EnabledForJreRange(min = JRE.JAVA_21)
         void testVirtualThreadUni() {
             given().body("rose").post("/flowers/uni/virtual-thread").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("peony").post("/flowers/uni/virtual-thread").then()
+                    .statusCode(500)
+                    .body(assertBodyRequestScopedContextWasNotActive());
+            given().body("daisy").post("/flowers/uni/virtual-thread").then()
                     .statusCode(500)
                     .body(assertBodyRequestScopedContextWasNotActive());
         }
@@ -137,8 +184,9 @@ public class KafkaContextPropagationTest {
     }
 
     protected Matcher<String> assertBodyRequestScopedContextWasNotActive() {
-        return CoreMatchers.either(containsString("RequestScoped context was not active"))
-                .or(containsString("RequestScoped context not propagated"));
+        return containsString("RequestScoped context was not active");
+        //        return CoreMatchers.either(containsString("RequestScoped context was not active"))
+        //                .or(containsString("RequestScoped context not propagated"));
     }
 
     @Test

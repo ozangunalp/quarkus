@@ -82,7 +82,7 @@ public class QuarkusWorkerPoolRegistry extends WorkerPoolRegistry {
     private <T> Uni<T> runOnWorkerThread(Context msgContext, Uni<T> uni, String workerName, boolean ordered) {
         WorkerExecutor worker = getWorker(workerName);
         if (msgContext != null) {
-            return uniOnMessageContext(worker.executeBlocking(uni, ordered), msgContext)
+            return worker.executeBlocking(uniOnMessageContext(uni, msgContext), ordered)
                     .onItemOrFailure().transformToUni((item, failure) -> {
                         return Uni.createFrom().emitter(emitter -> {
                             if (failure != null) {
@@ -97,7 +97,7 @@ public class QuarkusWorkerPoolRegistry extends WorkerPoolRegistry {
     }
 
     private static <T> Uni<T> uniOnMessageContext(Uni<T> uni, Context msgContext) {
-        return msgContext != Vertx.currentContext() ? Uni.createFrom().deferred(() -> uni)
+        return msgContext != Vertx.currentContext() ? uni
                 .runSubscriptionOn(r -> new ContextPreservingRunnable(r, msgContext).run())
                 : uni;
     }
