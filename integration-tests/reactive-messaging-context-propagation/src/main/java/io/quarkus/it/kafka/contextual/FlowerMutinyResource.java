@@ -1,4 +1,4 @@
-package io.quarkus.it.kafka;
+package io.quarkus.it.kafka.contextual;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -8,26 +8,27 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
+import io.quarkus.it.kafka.RequestBean;
 import io.quarkus.logging.Log;
-import io.quarkus.smallrye.reactivemessaging.runtime.ContextualEmitter;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.reactive.messaging.MutinyEmitter;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 
-@Path("/flowers/contextual")
-public class FlowerContextualResource {
+@Path("/flowers/mutiny")
+public class FlowerMutinyResource {
 
-    @Channel("contextual-flower")
-    ContextualEmitter<String> emitter;
+    @Channel("mutiny-flower")
+    MutinyEmitter<String> emitter;
 
-    @Channel("contextual-flower-blocking")
-    ContextualEmitter<String> emitterBlocking;
+    @Channel("mutiny-flower-blocking")
+    MutinyEmitter<String> emitterBlocking;
 
-    @Channel("contextual-flower-blocking-named")
-    ContextualEmitter<String> emitterBlockingNamed;
+    @Channel("mutiny-flower-blocking-named")
+    MutinyEmitter<String> emitterBlockingNamed;
 
-    @Channel("contextual-flower-virtual-thread")
-    ContextualEmitter<String> emitterVT;
+    @Channel("mutiny-flower-virtual-thread")
+    MutinyEmitter<String> emitterVT;
 
     @Inject
     RequestBean reqBean;

@@ -1,4 +1,4 @@
-package io.quarkus.it.kafka;
+package io.quarkus.it.kafka.contextual;
 
 import java.util.Objects;
 
@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
+import io.quarkus.it.kafka.RequestBean;
 import io.quarkus.logging.Log;
 import io.quarkus.test.vertx.VirtualThreadsAssertions;
 import io.smallrye.common.annotation.RunOnVirtualThread;

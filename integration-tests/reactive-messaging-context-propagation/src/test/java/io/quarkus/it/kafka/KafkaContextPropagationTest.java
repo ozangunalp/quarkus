@@ -135,51 +135,120 @@ public class KafkaContextPropagationTest {
         @Test
         void testNonBlocking() {
             given().body("rose").post("/flowers/contextual").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual").then().statusCode(204);
         }
 
         @Test
         void testNonBlockingUni() {
             given().body("rose").post("/flowers/contextual/uni").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual/uni").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual/uni").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual/uni").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual/uni").then().statusCode(204);
         }
 
         @Test
         void testBlocking() {
             given().body("rose").post("/flowers/contextual/blocking").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual/blocking").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual/blocking").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual/blocking").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual/blocking").then().statusCode(204);
         }
 
         @Test
         void testBlockingUni() {
             given().body("rose").post("/flowers/contextual/uni/blocking").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual/uni/blocking").then().statusCode(204);
-            given().body("rose").post("/flowers/contextual/uni/blocking").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual/uni/blocking").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual/uni/blocking").then().statusCode(204);
         }
 
         @Test
         void testBlockingNamed() {
             given().body("rose").post("/flowers/contextual/blocking-named").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual/blocking-named").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual/blocking-named").then().statusCode(204);
         }
 
         @Test
         void testBlockingNamedUni() {
             given().body("rose").post("/flowers/contextual/uni/blocking-named").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual/uni/blocking-named").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual/uni/blocking-named").then().statusCode(204);
         }
 
         @Test
         @EnabledForJreRange(min = JRE.JAVA_21)
         void testVirtualThread() {
             given().body("rose").post("/flowers/contextual/virtual-thread").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual/virtual-thread").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual/virtual-thread").then().statusCode(204);
         }
 
         @Test
         @EnabledForJreRange(min = JRE.JAVA_21)
         void testVirtualThreadUni() {
             given().body("rose").post("/flowers/contextual/uni/virtual-thread").then().statusCode(204);
+            given().body("peony").post("/flowers/contextual/uni/virtual-thread").then().statusCode(204);
+            given().body("daisy").post("/flowers/contextual/uni/virtual-thread").then().statusCode(204);
+        }
+    }
+
+    @Nested
+    class MutinyContextPropagated {
+        @Test
+        void testNonBlocking() {
+            given().body("rose").post("/flowers/mutiny").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny").then().statusCode(204);
+        }
+
+        @Test
+        void testNonBlockingUni() {
+            given().body("rose").post("/flowers/mutiny/uni").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny/uni").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny/uni").then().statusCode(204);
+        }
+
+        @Test
+        void testBlocking() {
+            given().body("rose").post("/flowers/mutiny/blocking").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny/blocking").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny/blocking").then().statusCode(204);
+        }
+
+        @Test
+        void testBlockingUni() {
+            given().body("rose").post("/flowers/mutiny/uni/blocking").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny/uni/blocking").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny/uni/blocking").then().statusCode(204);
+        }
+
+        @Test
+        void testBlockingNamed() {
+            given().body("rose").post("/flowers/mutiny/blocking-named").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny/blocking-named").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny/blocking-named").then().statusCode(204);
+        }
+
+        @Test
+        void testBlockingNamedUni() {
+            given().body("rose").post("/flowers/mutiny/uni/blocking-named").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny/uni/blocking-named").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny/uni/blocking-named").then().statusCode(204);
+        }
+
+        @Test
+        @EnabledForJreRange(min = JRE.JAVA_21)
+        void testVirtualThread() {
+            given().body("rose").post("/flowers/mutiny/virtual-thread").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny/virtual-thread").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny/virtual-thread").then().statusCode(204);
+        }
+
+        @Test
+        @EnabledForJreRange(min = JRE.JAVA_21)
+        void testVirtualThreadUni() {
+            given().body("rose").post("/flowers/mutiny/uni/virtual-thread").then().statusCode(204);
+            given().body("peony").post("/flowers/mutiny/uni/virtual-thread").then().statusCode(204);
+            given().body("daisy").post("/flowers/mutiny/uni/virtual-thread").then().statusCode(204);
         }
     }
 

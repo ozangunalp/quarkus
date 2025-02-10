@@ -47,10 +47,10 @@ public class ContextualEmitterImpl<T> extends AbstractEmitter<T> implements Cont
             throw ex.illegalArgumentForNullValue();
         }
 
-        // If we are running on a Vert.x I/O thread, we need to capture the context to switch back
+        // If we are running on a Vert.x conmtext, we need to capture the context to switch back
         // during the emission.
         Context context = Vertx.currentContext();
-        // context propagation capture
+        // context propagation capture and duplicate the context
         return Uni.createFrom().item(() -> ContextAwareMessage.withContextMetadata((Message<? extends T>) msg))
                 .plug(uni -> {
                     // return the captured context early for destroying the state if some context is cleared
@@ -59,7 +59,9 @@ public class ContextualEmitterImpl<T> extends AbstractEmitter<T> implements Cont
                     } else {
                         return uni;
                     }
-                }).plug(uni -> transformToUni(uni, message -> emitter(e -> {
+                })
+                // emit the message, skip context propagation as it is unnecessary here
+                .plug(uni -> transformToUni(uni, message -> ContextualEmitterImpl.<Void> emitter(e -> {
                     try {
                         emit(message
                                 .withAck(() -> {
@@ -75,7 +77,9 @@ public class ContextualEmitterImpl<T> extends AbstractEmitter<T> implements Cont
                         msg.nack(t);
                         throw t;
                     }
-                }).replaceWithVoid())).plug(uni -> {
+                })))
+                // switch back to the caller context
+                .plug(uni -> {
                     if (context != null) {
                         return uni.emitOn(r -> context.runOnContext(x -> r.run()));
                     }
