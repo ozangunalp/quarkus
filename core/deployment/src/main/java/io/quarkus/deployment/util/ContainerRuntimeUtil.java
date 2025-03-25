@@ -162,6 +162,7 @@ public final class ContainerRuntimeUtil {
                 if (exitCode != 0) {
                     log.debugf("Command \"%s\" output: %s", String.join(" ", pb.command()),
                             bufferedReader.lines().collect(Collectors.joining(System.lineSeparator())));
+                    return ContainerRuntime.UNAVAILABLE;
                 } else {
                     Predicate<String> stringPredicate;
                     // Docker includes just "rootless" under SecurityOptions, while podman includes "rootless: <boolean>"
@@ -182,10 +183,13 @@ public final class ContainerRuntimeUtil {
                         isInWindowsWSL = bufferedReader.lines().anyMatch(stringPredicate);
                     }
                 }
+            } catch (Exception e) {
+                // If an exception is thrown in the process, assume we are not running rootless (default docker installation)
+                log.debugf(e, "Failure to read info output from %s", String.join(" ", pb.command()));
             }
         } catch (IOException | InterruptedException e) {
-            // If an exception is thrown in the process, assume we are not running rootless (default docker installation)
-            log.debugf(e, "Failure to read info output from %s", String.join(" ", pb.command()));
+            log.debugf(e, "Failure to execute %s", String.join(" ", pb.command()));
+            return ContainerRuntime.UNAVAILABLE;
         } finally {
             if (rootlessProcess != null) {
                 rootlessProcess.destroy();
