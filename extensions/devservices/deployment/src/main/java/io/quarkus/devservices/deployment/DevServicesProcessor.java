@@ -37,6 +37,7 @@ import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ContainerNetworkSettings;
 
 import io.quarkus.deployment.IsDevelopment;
+import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.ConsoleCommandBuildItem;
@@ -44,6 +45,7 @@ import io.quarkus.deployment.builditem.DevServicesComposeProjectBuildItem;
 import io.quarkus.deployment.builditem.DevServicesLauncherConfigResultBuildItem;
 import io.quarkus.deployment.builditem.DevServicesNetworkIdBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
+import io.quarkus.deployment.builditem.DevServicesTrackerBuildItem;
 import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleCommand;
@@ -100,6 +102,11 @@ public class DevServicesProcessor {
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    @BuildStep(onlyIfNot = IsNormal.class)
+    DevServicesTrackerBuildItem getDevServicesTracker() {
+        return new DevServicesTrackerBuildItem();
     }
 
     @BuildStep(onlyIf = { IsDevelopment.class })
