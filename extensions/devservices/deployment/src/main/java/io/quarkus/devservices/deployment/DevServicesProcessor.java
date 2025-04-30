@@ -56,6 +56,7 @@ import io.quarkus.deployment.dev.devservices.DevServiceDescriptionBuildItem;
 import io.quarkus.deployment.util.ContainerRuntimeUtil;
 import io.quarkus.deployment.util.ContainerRuntimeUtil.ContainerRuntime;
 import io.quarkus.dev.spi.DevModeType;
+import io.quarkus.devservice.runtime.config.DevServicesConfigBuilder;
 import io.quarkus.devservices.common.ContainerUtil;
 import io.quarkus.devui.spi.buildtime.FooterLogBuildItem;
 

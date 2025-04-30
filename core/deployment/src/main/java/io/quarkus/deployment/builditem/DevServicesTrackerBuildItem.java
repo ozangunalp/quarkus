@@ -1,15 +1,17 @@
 package io.quarkus.deployment.builditem;
 
 import java.io.Closeable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.quarkus.builder.item.SimpleBuildItem;
-import io.quarkus.runtime.DevServicesTracker;
+import io.quarkus.runtime.DevServicesConfigTracker;
 
 // Ideally we would have a unique build item for each processor/feature, but that would need a new KeyedBuildItem or FeatureBuildItem type
 // Needs to be in core because DevServicesResultBuildItem is in core
@@ -17,11 +19,33 @@ public final class DevServicesTrackerBuildItem extends SimpleBuildItem {
 
     // A map of a map of a list? What?!?
     // The reason this is like this, rather than being broken out into types, is because this map gets shared between classloaders, so language-level constructs work best
-    private final Map<String, Map<Map, List<Closeable>>> systemInstance;
+    private static Map<String, Map<Map, List<Closeable>>> systemInstance = null;
+    private final DevServicesConfigTracker configTracker;
 
     public DevServicesTrackerBuildItem() {
 
-        systemInstance = new DevServicesTracker().getBackingMap();
+        if (systemInstance == null) {
+            try {
+                Class s = ClassLoader.getSystemClassLoader().loadClass(DevServicesTrackerBuildItem.class.getName());
+                systemInstance = (Map<String, Map<Map, List<Closeable>>>) s.getMethod("getBackingMap")
+                        .invoke(null);
+            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        configTracker = new DevServicesConfigTracker();
+
+    }
+
+    /**
+     * Public so it can be used across classloaders. Should not be used except by this class.
+     * Invoked reflectively.
+     */
+    public static Map getBackingMap() {
+        if (systemInstance == null) {
+            systemInstance = new ConcurrentHashMap<>();
+        }
+        return systemInstance;
     }
 
     public List getRunningServices(String featureName,
@@ -58,10 +82,12 @@ public final class DevServicesTrackerBuildItem extends SimpleBuildItem {
         List<Closeable> list = new ArrayList<>();
         list.add(service);
         services.put(identifyingConfig, list);
+
+        configTracker.addRunningService(service);
     }
 
     public void removeRunningService(String name, Map<String, String> identifyingConfig,
-            Closeable service) {
+            DevServicesResultBuildItem.RunnableDevService service) {
         Map<Map, List<Closeable>> services = systemInstance.get(name);
 
         if (services != null) {
@@ -70,6 +96,9 @@ public final class DevServicesTrackerBuildItem extends SimpleBuildItem {
                 servicesForConfig.remove(service);
             }
         }
+
+        configTracker.removeRunningService(service);
+
     }
 
 }

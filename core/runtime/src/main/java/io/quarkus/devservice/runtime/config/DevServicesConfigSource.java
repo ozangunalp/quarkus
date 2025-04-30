@@ -1,4 +1,4 @@
-package io.quarkus.devservices.deployment;
+package io.quarkus.devservice.runtime.config;
 
 import java.util.Map;
 import java.util.Set;
@@ -6,11 +6,12 @@ import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
-import io.quarkus.runtime.DevServicesTracker;
+import io.quarkus.runtime.DevServicesConfigTracker;
 
+// This should live in the devservices/runtime module, but that module doesn't exist, and adding it is a breaking change
 public class DevServicesConfigSource implements ConfigSource {
 
-    DevServicesTracker devServiceTrackerBuildItem = new DevServicesTracker();
+    DevServicesConfigTracker devServiceTrackerBuildItem = new DevServicesConfigTracker();
 
     @Override
     public Set<String> getPropertyNames() {
