@@ -48,6 +48,7 @@ import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.DevServicesTrackerBuildItem;
 import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
+import io.quarkus.deployment.builditem.RunTimeConfigBuilderBuildItem;
 import io.quarkus.deployment.console.ConsoleCommand;
 import io.quarkus.deployment.console.ConsoleStateManager;
 import io.quarkus.deployment.dev.devservices.ContainerInfo;
@@ -107,6 +108,16 @@ public class DevServicesProcessor {
     @BuildStep(onlyIfNot = IsNormal.class)
     DevServicesTrackerBuildItem getDevServicesTracker() {
         return new DevServicesTrackerBuildItem();
+    }
+
+    @BuildStep
+    public RunTimeConfigBuilderBuildItem registerDevResourcesConfigSource(
+            List<DevServicesResultBuildItem> devServicesResults) {
+        //        We want to track two kinds of things;
+        //        one is dev services from a previous run that a processor might want to re - use, and the other is dev services from a previous run that a processor might want to close
+        //        The getting is different, but the setting can be the same
+
+        return new RunTimeConfigBuilderBuildItem(DevServicesConfigBuilder.class);
     }
 
     @BuildStep(onlyIf = { IsDevelopment.class })

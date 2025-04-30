@@ -1,46 +1,27 @@
 package io.quarkus.deployment.builditem;
 
 import java.io.Closeable;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import io.quarkus.builder.item.SimpleBuildItem;
+import io.quarkus.runtime.DevServicesTracker;
 
 // Ideally we would have a unique build item for each processor/feature, but that would need a new KeyedBuildItem or FeatureBuildItem type
+// Needs to be in core because DevServicesResultBuildItem is in core
 public final class DevServicesTrackerBuildItem extends SimpleBuildItem {
 
     // A map of a map of a list? What?!?
     // The reason this is like this, rather than being broken out into types, is because this map gets shared between classloaders, so language-level constructs work best
-    private volatile static Map<String, Map<Map, List<Closeable>>> systemInstance = null;
+    private final Map<String, Map<Map, List<Closeable>>> systemInstance;
 
     public DevServicesTrackerBuildItem() {
 
-        if (systemInstance == null) {
-            try {
-                Class s = ClassLoader.getSystemClassLoader().loadClass(DevServicesTrackerBuildItem.class.getName());
-                systemInstance = (Map<String, Map<Map, List<Closeable>>>) s.getMethod("getBackingMap")
-                        .invoke(null);
-            } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    /**
-     * Public so it can be used across classloaders. Should not be used except by this class.
-     * Invoked reflectively.
-     */
-    public static Map getBackingMap() {
-        if (systemInstance == null) {
-            systemInstance = new ConcurrentHashMap<>();
-        }
-        return systemInstance;
+        systemInstance = new DevServicesTracker().getBackingMap();
     }
 
     public List getRunningServices(String featureName,
@@ -64,7 +45,7 @@ public final class DevServicesTrackerBuildItem extends SimpleBuildItem {
         }
     }
 
-    public void addRunningService(String name, Map<String, String> config,
+    public void addRunningService(String name, Map<String, String> identifyingConfig,
             DevServicesResultBuildItem.RunnableDevService service) {
         Map<Map, List<Closeable>> services = systemInstance.get(name);
 
@@ -76,15 +57,15 @@ public final class DevServicesTrackerBuildItem extends SimpleBuildItem {
         // Make a list so that we can add and remove to it
         List<Closeable> list = new ArrayList<>();
         list.add(service);
-        services.put(config, list);
+        services.put(identifyingConfig, list);
     }
 
-    public void removeRunningService(String name, Map<String, String> config,
+    public void removeRunningService(String name, Map<String, String> identifyingConfig,
             Closeable service) {
         Map<Map, List<Closeable>> services = systemInstance.get(name);
 
         if (services != null) {
-            List servicesForConfig = services.get(config);
+            List servicesForConfig = services.get(identifyingConfig);
             if (servicesForConfig != null) {
                 servicesForConfig.remove(service);
             }

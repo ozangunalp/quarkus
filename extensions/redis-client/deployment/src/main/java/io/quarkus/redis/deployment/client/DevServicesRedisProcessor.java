@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import io.quarkus.deployment.Feature;
@@ -30,6 +31,7 @@ import io.quarkus.deployment.builditem.DevServicesSharedNetworkBuildItem;
 import io.quarkus.deployment.builditem.DevServicesTrackerBuildItem;
 import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
+import io.quarkus.deployment.builditem.Startable;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
 import io.quarkus.deployment.dev.devservices.DevServicesConfig;
@@ -37,7 +39,6 @@ import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.devservices.common.ComposeLocator;
 import io.quarkus.devservices.common.ConfigureUtil;
 import io.quarkus.devservices.common.ContainerLocator;
-import io.quarkus.devservices.common.LazyContainer;
 import io.quarkus.redis.deployment.client.RedisBuildTimeConfig.DevServiceConfiguration;
 import io.quarkus.redis.runtime.client.config.RedisConfig;
 import io.quarkus.runtime.LaunchMode;
@@ -163,18 +164,27 @@ public class DevServicesRedisProcessor {
                     useSharedNetwork);
             timeout.ifPresent(redisContainer::withStartupTimeout);
             redisContainer.withEnv(devServicesConfig.containerEnv());
-            String redisHost = REDIS_SCHEME + redisContainer.getHost() + ":" + redisContainer.getPort();
+            String redisHost = fixedExposedPort.isPresent()
+                    ? REDIS_SCHEME + redisContainer.getHost() + ":" + redisContainer.getPort()
+                    : null;
 
             // This config map is what we use for deciding if a container from another profile can be re-used
             // TODO ideally the container properties would get put into it in a centralised way, but the RunnableDevService object doesn't get passed detailed information about the container
             Map config = new HashMap();
-            config.put(configPrefix + RedisConfig.HOSTS_CONFIG_NAME, redisHost);
+            if (fixedExposedPort.isPresent()) {
+                config.put(configPrefix + RedisConfig.HOSTS_CONFIG_NAME, redisHost);
+            }
             config.put(IMAGE_NAME_KEY, dockerImageName.asCanonicalNameString());
+
+            Map dynamicConfig = new HashMap();
+            Supplier hoster = () -> REDIS_SCHEME + redisContainer.getHost() + ":" + redisContainer.getPort();
+            dynamicConfig.put(configPrefix + RedisConfig.HOSTS_CONFIG_NAME, hoster);
 
             RunnableDevService answer = new RunnableDevService(
                     Feature.REDIS_CLIENT.getName(),
                     redisContainer.getContainerId(),
-                    redisContainer, config, tracker);
+                    (Startable) redisContainer, config, dynamicConfig, tracker);
+            // TODO is this case right? or make everyone implement it? Or have an interface of our own?
 
             return answer;
 
@@ -202,7 +212,7 @@ public class DevServicesRedisProcessor {
         return configPrefix;
     }
 
-    private static class QuarkusPortRedisContainer extends LazyContainer<QuarkusPortRedisContainer> {
+    private static class QuarkusPortRedisContainer extends GenericContainer<QuarkusPortRedisContainer> implements Startable {
         private final OptionalInt fixedExposedPort;
         private final boolean useSharedNetwork;
 
@@ -211,13 +221,7 @@ public class DevServicesRedisProcessor {
         public QuarkusPortRedisContainer(DockerImageName dockerImageName, OptionalInt fixedExposedPort, String serviceName,
                 String defaultNetworkId, boolean useSharedNetwork) {
             super(dockerImageName);
-            if (fixedExposedPort.isPresent()) {
-                this.fixedExposedPort = fixedExposedPort;
-            } else {
-                int localPort = findFreePort();
-
-                this.fixedExposedPort = OptionalInt.of(localPort);
-            }
+            this.fixedExposedPort = fixedExposedPort;
             this.useSharedNetwork = useSharedNetwork;
 
             if (serviceName != null) {
@@ -255,6 +259,10 @@ public class DevServicesRedisProcessor {
         @Override
         public String getHost() {
             return useSharedNetwork ? hostName : super.getHost();
+        }
+
+        public void close() {
+            super.close();
         }
     }
 }

@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
@@ -148,18 +149,20 @@ public final class DevServicesResultBuildItem extends MultiBuildItem {
         }
     }
 
-    public static class RunnableDevService extends RunningDevService {
+    public static class RunnableDevService extends RunningDevService implements Supplier<Map<String, String>> {
         final DevServicesTrackerBuildItem tracker;
 
         private final Startable container;
+        private Map<String, Supplier> lazyConfig;
 
         public RunnableDevService(String name, String containerId, Startable container, Map config,
-                DevServicesTrackerBuildItem tracker) {
+                Map lazyConfig, DevServicesTrackerBuildItem tracker) {
             super(name, containerId, container::close, config);
 
             this.container = container;
             this.tracker = tracker;
             isRunning = false;
+            this.lazyConfig = lazyConfig;
         }
 
         public boolean isRunning() {
@@ -175,7 +178,7 @@ public final class DevServicesResultBuildItem extends MultiBuildItem {
 
             if (matchedDevServices == null || matchedDevServices.size() > 0) {
                 // There isn't a running container that has the right config, we need to do work
-                // Let's get all the running dev services associated with this feature
+                // Let's get all the running dev services associated with this feature, so we can close them
                 Collection<Closeable> unusableDevServices = tracker.getAllServices(name);
                 if (unusableDevServices != null) {
                     for (Closeable closeable : unusableDevServices) {
@@ -204,6 +207,17 @@ public final class DevServicesResultBuildItem extends MultiBuildItem {
 
         public DevServicesResultBuildItem toBuildItem() {
             return new DevServicesResultBuildItem(name, description, containerId, config, this);
+        }
+
+        @Override
+        public Map<String, String> get() {
+            // TODO printlns show this gets called way too often - does specifying the properties cut that down?
+            Map config = getConfig();
+            Map newConfig = new HashMap<>(config);
+            for (Map.Entry<String, Supplier> entry : lazyConfig.entrySet()) {
+                newConfig.put(entry.getKey(), entry.getValue().get());
+            }
+            return newConfig;
         }
     }
 }
