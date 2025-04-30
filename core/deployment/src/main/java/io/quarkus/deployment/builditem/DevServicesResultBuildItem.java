@@ -132,6 +132,9 @@ public final class DevServicesResultBuildItem extends MultiBuildItem {
             return closeable;
         }
 
+        // This method should be on RunningDevService, but not on RunnableDevService, where we use different logic to
+        // decide when it's time to close a container. For now, leave it where it is and hope it doesn't get called when it shouldn't.
+        // We can either make a common parent class or throw unsupported when this is called from Runnable.
         public boolean isOwner() {
             return closeable != null;
         }
