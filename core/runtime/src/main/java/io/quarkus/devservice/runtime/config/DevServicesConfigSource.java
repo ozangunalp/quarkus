@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
-import io.quarkus.runtime.DevServicesConfigTracker;
+import io.quarkus.devservices.runtime.DevServicesConfigTracker;
 
 // This should live in the devservices/runtime module, but that module doesn't exist, and adding it is a breaking change
 public class DevServicesConfigSource implements ConfigSource {

@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.quarkus.builder.item.SimpleBuildItem;
-import io.quarkus.runtime.DevServicesConfigTracker;
+import io.quarkus.devservices.runtime.DevServicesConfigTracker;
 
 // Ideally we would have a unique build item for each processor/feature, but that would need a new KeyedBuildItem or FeatureBuildItem type
 // Needs to be in core because DevServicesResultBuildItem is in core
