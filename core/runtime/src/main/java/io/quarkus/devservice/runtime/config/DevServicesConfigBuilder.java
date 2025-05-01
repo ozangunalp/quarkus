@@ -13,9 +13,10 @@ public class DevServicesConfigBuilder implements ConfigBuilder {
 
     @Override
     public int priority() {
-        // We feel more important than config in environment variables and application.properties files, but dev services should be looking at those sources and not doing anything if there's existing config,
+        // What's the right priority? This is a cheeky dynamic override, so a high priority seems correct, but dev services are supposed to fill in gaps in existing information.
+        // Dev services should be looking at those sources and not doing anything if there's existing config,
         // so a very low priority is also arguably correct.
 
-        return 500;
+        return 10;
     }
 }

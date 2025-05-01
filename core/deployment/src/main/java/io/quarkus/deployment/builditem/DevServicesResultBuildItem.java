@@ -176,7 +176,8 @@ public final class DevServicesResultBuildItem extends MultiBuildItem {
             // We want to do two things; find things with the same config as us to reuse them, and find things with different config to close them
             // We figure out if we need to shut down existing redis containers that might have been started in previous profiles or restarts
 
-            List<RunnableDevService> matchedDevServices = tracker.getRunningServices(name, config);
+            // These RunnableDevService classes could be from another classloader, so don't make assumptions about the class
+            List<?> matchedDevServices = tracker.getRunningServices(name, config);
             // if the redis containers have already started we just return; if we wanted to be very cautious we could check the entries for an isRunningStatus, but they might be in the wrong classloader, so that's hard work
 
             if (matchedDevServices == null || matchedDevServices.size() > 0) {

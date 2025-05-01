@@ -35,7 +35,7 @@ public class DevServicesConfigSource implements ConfigSource {
 
     @Override
     public int getOrdinal() {
-        // greater than any default Microprofile ConfigSource
-        return 500;
+        // See discussion on DevServicesConfigBuilder about what the right value here is
+        return 10;
     }
 }
