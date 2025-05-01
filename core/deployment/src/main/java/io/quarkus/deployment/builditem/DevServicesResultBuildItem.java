@@ -73,6 +73,15 @@ public final class DevServicesResultBuildItem extends MultiBuildItem {
         }
     }
 
+    // Ideally everyone would use the config source, but if people need to ask for config directly, make it possible
+    public Map<String, String> getDynamicConfig() {
+        if (runnableDevService != null && runnableDevService.isRunning()) {
+            return runnableDevService.get();
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
     public static class RunningDevService implements Closeable {
 
         protected final String name;

@@ -183,8 +183,7 @@ public class DevServicesRedisProcessor {
             RunnableDevService answer = new RunnableDevService(
                     Feature.REDIS_CLIENT.getName(),
                     redisContainer.getContainerId(),
-                    (Startable) redisContainer, config, dynamicConfig, tracker);
-            // TODO is this case right? or make everyone implement it? Or have an interface of our own?
+                    redisContainer, config, dynamicConfig, tracker);
 
             return answer;
 

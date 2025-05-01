@@ -1,5 +1,6 @@
 package io.quarkus.devservice.runtime.config;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -11,19 +12,25 @@ import io.quarkus.devservices.runtime.DevServicesConfigTracker;
 // This should live in the devservices/runtime module, but that module doesn't exist, and adding it is a breaking change
 public class DevServicesConfigSource implements ConfigSource {
 
-    DevServicesConfigTracker devServiceTrackerBuildItem = new DevServicesConfigTracker();
+    DevServicesConfigTracker tracker = new DevServicesConfigTracker();
 
     @Override
     public Set<String> getPropertyNames() {
-        return Set.of();
+        // We could make this more efficient by not invoking the supplier on the other end, but it would need a more complex interface
+        Set<String> names = new HashSet<>();
+
+        for (Supplier<Map> o : tracker.getAllRunningServices()) {
+            Map config = o.get();
+            names.addAll(config.keySet());
+        }
+        return names;
     }
 
     @Override
     public String getValue(String propertyName) {
-        for (Object o : devServiceTrackerBuildItem.getAllRunningServices()) {
-            Map config = (Map) ((Supplier) o).get();
+        for (Supplier<Map> o : tracker.getAllRunningServices()) {
+            Map config = o.get();
             return (String) config.get(propertyName);
-
         }
         return null;
     }

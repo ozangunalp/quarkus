@@ -1,6 +1,7 @@
 package io.quarkus.test.junit;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import io.quarkus.builder.BuildResult;
@@ -27,6 +28,13 @@ public class NativeDevServicesHandler implements BiConsumer<Object, BuildResult>
                 .consumeMulti(DevServicesResultBuildItem.class);
         for (DevServicesResultBuildItem devServicesResultBuildItem : devServicesResultBuildItems) {
             devServicesResultBuildItem.start();
+
+            // It would be nice to use the config source, but since we have the build item right there and this is a one-shot operation, just ask it instead
+            Map<String, String> dynamicConfig = devServicesResultBuildItem.getDynamicConfig();
+            for (Map.Entry<String, String> entry : dynamicConfig.entrySet()) {
+                propertyConsumer.accept(entry.getKey(), entry.getValue());
+
+            }
         }
     }
 }

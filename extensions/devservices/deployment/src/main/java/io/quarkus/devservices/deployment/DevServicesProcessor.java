@@ -108,16 +108,16 @@ public class DevServicesProcessor {
 
     @BuildStep(onlyIfNot = IsNormal.class)
     DevServicesTrackerBuildItem getDevServicesTracker() {
+        //        We want to track two kinds of things;
+        //        one is dev services from a previous run that a processor might want to re - use, and the other is dev services from a previous run that a processor might want to close
+        //        The getting is different, but the setting can be the same
         return new DevServicesTrackerBuildItem();
     }
 
     @BuildStep
     public RunTimeConfigBuilderBuildItem registerDevResourcesConfigSource(
             List<DevServicesResultBuildItem> devServicesResults) {
-        //        We want to track two kinds of things;
-        //        one is dev services from a previous run that a processor might want to re - use, and the other is dev services from a previous run that a processor might want to close
-        //        The getting is different, but the setting can be the same
-
+        // Once all the dev services are registered, we can share config
         return new RunTimeConfigBuilderBuildItem(DevServicesConfigBuilder.class);
     }
 
