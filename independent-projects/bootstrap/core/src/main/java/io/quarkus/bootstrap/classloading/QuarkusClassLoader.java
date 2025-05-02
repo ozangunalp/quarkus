@@ -223,7 +223,7 @@ public class QuarkusClassLoader extends ClassLoader implements Closeable {
 
     private boolean parentFirst(String name, ClassPathResourceIndex classPathResourceIndex) {
         // TODO ugly hardcoding
-        return parentFirst || name.matches("io/quarkus/deployment/builditem/DevServicesTrackerBuildItem.class")
+        return parentFirst || name.matches("io/quarkus/deployment/builditem/DevServicesTrackerHolder.class")
                 || name.matches("io/quarkus/devservices/runtime/DevServicesConfigTracker.class")
                 || classPathResourceIndex.isParentFirst(name);
     }
