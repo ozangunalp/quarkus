@@ -1,12 +1,11 @@
 package io.quarkus.deployment.builditem;
 
-import java.io.Closeable;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import io.quarkus.builder.item.SimpleBuildItem;
 import io.quarkus.devservices.crossclassloader.runtime.RunningDevServicesTracker;
+import io.quarkus.devservices.crossclassloader.runtime.RunningDevServicesTracker.RunningDevService;
+import io.quarkus.devservices.crossclassloader.runtime.RunningDevServicesTracker.ServiceConfig;
 
 // Ideally we would have a unique build item for each processor/feature, but that would need a new KeyedBuildItem or FeatureBuildItem type
 // Needs to be in core because DevServicesResultBuildItem is in core
@@ -20,23 +19,16 @@ public final class DevServicesTrackerBuildItem extends SimpleBuildItem {
         tracker = new RunningDevServicesTracker();
     }
 
-    public List getRunningServices(String featureName,
-            Map identifyingConfig) {
-        return tracker.getRunningServices(featureName, identifyingConfig);
+    public RunningDevServicesTracker tracker() {
+        return tracker;
     }
 
-    public Set<Closeable> getAllServices(String featureName) {
-        return tracker.getAllServices(featureName);
+    public List<RunningDevService> getRunningServices(ServiceConfig identifyingConfig) {
+        return tracker.getRunningServices(identifyingConfig);
     }
 
-    public void addRunningService(String name, Map<String, String> identifyingConfig,
-            DevServicesResultBuildItem.RunnableDevService service) {
-        tracker.addRunningService(name, identifyingConfig, service);
-    }
-
-    public void removeRunningService(String name, Map<String, String> identifyingConfig,
-            DevServicesResultBuildItem.RunnableDevService service) {
-        tracker.removeRunningService(name, identifyingConfig, service);
+    public List<RunningDevService> getRunningServicesWithDifferentConfig(ServiceConfig serviceConfig) {
+        return tracker.getRunningServicesWithDifferentConfig(serviceConfig);
     }
 
 }

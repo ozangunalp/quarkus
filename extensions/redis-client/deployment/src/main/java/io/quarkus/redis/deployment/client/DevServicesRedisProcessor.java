@@ -23,10 +23,9 @@ import io.quarkus.deployment.Feature;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.BuildSteps;
+import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
 import io.quarkus.deployment.builditem.DevServicesComposeProjectBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
-import io.quarkus.deployment.builditem.DevServicesResultBuildItem.RunnableDevService;
-import io.quarkus.deployment.builditem.DevServicesResultBuildItem.RunningDevService;
 import io.quarkus.deployment.builditem.DevServicesSharedNetworkBuildItem;
 import io.quarkus.deployment.builditem.DevServicesTrackerBuildItem;
 import io.quarkus.deployment.builditem.DockerStatusBuildItem;
@@ -36,9 +35,14 @@ import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
 import io.quarkus.deployment.dev.devservices.DevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
+import io.quarkus.dev.spi.DevModeType;
 import io.quarkus.devservices.common.ComposeLocator;
 import io.quarkus.devservices.common.ConfigureUtil;
 import io.quarkus.devservices.common.ContainerLocator;
+import io.quarkus.devservices.crossclassloader.runtime.RunningDevServicesTracker.AppConfig;
+import io.quarkus.devservices.crossclassloader.runtime.RunningDevServicesTracker.RunnableDevService;
+import io.quarkus.devservices.crossclassloader.runtime.RunningDevServicesTracker.RunningDevService;
+import io.quarkus.devservices.crossclassloader.runtime.RunningDevServicesTracker.ServiceConfig;
 import io.quarkus.redis.deployment.client.RedisBuildTimeConfig.DevServiceConfiguration;
 import io.quarkus.redis.runtime.client.config.RedisConfig;
 import io.quarkus.runtime.LaunchMode;
@@ -47,8 +51,6 @@ import io.quarkus.runtime.configuration.ConfigUtils;
 @BuildSteps(onlyIfNot = IsNormal.class, onlyIf = { DevServicesConfig.Enabled.class })
 public class DevServicesRedisProcessor {
     private static final Logger log = Logger.getLogger(DevServicesRedisProcessor.class);
-
-    private static final String IMAGE_NAME_KEY = "quarkus.redis.devservices.image-name";
 
     private static final String REDIS_IMAGE = "docker.io/redis:7";
     private static final int REDIS_EXPOSED_PORT = 6379;
@@ -66,6 +68,17 @@ public class DevServicesRedisProcessor {
     private static final String QUARKUS = "quarkus.";
     private static final String DOT = ".";
 
+    static ServiceConfig serviceConfig(io.quarkus.redis.deployment.client.DevServicesConfig config,
+            LaunchModeBuildItem launchMode) {
+        return new ServiceConfig(new AppConfig(Feature.REDIS_CLIENT.getName(),
+                launchMode.getLaunchMode().name(),
+                launchMode.getDevModeType().map(DevModeType::name).orElse(null),
+                launchMode.isAuxiliaryApplication(),
+                launchMode.getAuxiliaryDevModeType().map(DevModeType::name).orElse(null),
+                launchMode.isTest()),
+                config);
+    }
+
     @BuildStep
     public List<DevServicesResultBuildItem> startRedisContainers(LaunchModeBuildItem launchMode,
             DockerStatusBuildItem dockerStatusBuildItem,
@@ -73,6 +86,7 @@ public class DevServicesRedisProcessor {
             List<DevServicesSharedNetworkBuildItem> devServicesSharedNetworkBuildItem,
             RedisBuildTimeConfig config,
             DevServicesTrackerBuildItem tracker,
+            CuratedApplicationShutdownBuildItem closeBuildItem,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
             DevServicesConfig devServicesConfig) {
@@ -83,7 +97,6 @@ public class DevServicesRedisProcessor {
         // We cannot assume an augmentation order, so we cannot just check and reuse previous dev services.
         // We *could* get the services from the tracker, and short circuit some work. But that short circuit has some risk.
         // If the matching RunningDevService was in a different classloader, we'd get a ClassCastException.
-
         List<RunningDevService> newDevServices = new ArrayList<>();
 
         StartupLogCompressor compressor = new StartupLogCompressor(
@@ -94,10 +107,18 @@ public class DevServicesRedisProcessor {
                 String connectionName = entry.getKey();
                 boolean useSharedNetwork = DevServicesSharedNetworkBuildItem.isSharedNetworkRequired(devServicesConfig,
                         devServicesSharedNetworkBuildItem);
+                var devServiceCfg = entry.getValue().devservices();
+                ServiceConfig serviceConfig = serviceConfig(devServiceCfg, launchMode);
+                List<RunningDevService> services = tracker.getRunningServices(serviceConfig);
+                if (!services.isEmpty()) {
+                    newDevServices.addAll(services);
+                    continue;
+                }
 
                 RunningDevService devService = createContainer(dockerStatusBuildItem, composeProjectBuildItem,
                         connectionName,
-                        entry.getValue().devservices(),
+                        serviceConfig,
+                        devServiceCfg,
                         launchMode.getLaunchMode(),
                         useSharedNetwork, devServicesConfig.timeout(), tracker);
                 if (devService == null) {
@@ -105,6 +126,21 @@ public class DevServicesRedisProcessor {
                 }
 
                 newDevServices.add(devService);
+
+                log.warnf("Creating %s for %s.", devService, serviceConfig);
+
+                //                closeBuildItem.addCloseTask(() -> {
+                //                    List<RunningDevService> running = tracker.getRunningServices(serviceConfig);
+                //                    if (running != null && !running.isEmpty()) {
+                //                        for (RunningDevService runningDevService : running) {
+                //                            try {
+                //                                runningDevService.close();
+                //                            } catch (Throwable t) {
+                //                                log.error("Failed to stop dev service", t);
+                //                            }
+                //                        }
+                //                    }
+                //                }, true);
                 String configKey = getConfigPrefix(connectionName) + RedisConfig.HOSTS_CONFIG_NAME;
                 log.infof("The %s redis server is ready to accept connections on %s", connectionName,
                         devService.getConfig().get(configKey));
@@ -119,12 +155,13 @@ public class DevServicesRedisProcessor {
             throw new RuntimeException(t);
         }
 
-        return newDevServices.stream().map(RunningDevService::toBuildItem).collect(Collectors.toList());
+        return newDevServices.stream().map(DevServicesResultBuildItem::devServicesResult).collect(Collectors.toList());
     }
 
     private RunningDevService createContainer(DockerStatusBuildItem dockerStatusBuildItem,
             DevServicesComposeProjectBuildItem composeProjectBuildItem,
             String name,
+            ServiceConfig serviceConfig,
             io.quarkus.redis.deployment.client.DevServicesConfig devServicesConfig, LaunchMode launchMode,
             boolean useSharedNetwork, Optional<Duration> timeout, DevServicesTrackerBuildItem tracker) {
 
@@ -164,32 +201,22 @@ public class DevServicesRedisProcessor {
                     useSharedNetwork);
             timeout.ifPresent(redisContainer::withStartupTimeout);
             redisContainer.withEnv(devServicesConfig.containerEnv());
-            String redisHost = fixedExposedPort.isPresent()
-                    ? REDIS_SCHEME + redisContainer.getHost() + ":" + redisContainer.getPort()
-                    : null;
 
-            // This config map is what we use for deciding if a container from another profile can be re-used
-            // TODO ideally the container properties would get put into it in a centralised way, but the RunnableDevService object doesn't get passed detailed information about the container
-            Map config = new HashMap();
-            if (fixedExposedPort.isPresent()) {
-                config.put(configPrefix + RedisConfig.HOSTS_CONFIG_NAME, redisHost);
-            }
-            config.put(IMAGE_NAME_KEY, dockerImageName.asCanonicalNameString());
-
-            Map dynamicConfig = new HashMap();
-            Supplier hoster = () -> REDIS_SCHEME + redisContainer.getHost() + ":" + redisContainer.getPort();
+            Map<String, Supplier<?>> dynamicConfig = new HashMap<>();
+            Supplier<String> hoster = () -> REDIS_SCHEME + redisContainer.getHost() + ":" + redisContainer.getPort();
             dynamicConfig.put(configPrefix + RedisConfig.HOSTS_CONFIG_NAME, hoster);
 
-            RunnableDevService answer = new RunnableDevService(
+            return new RunnableDevService(
                     Feature.REDIS_CLIENT.getName(),
+                    serviceConfig,
                     redisContainer.getContainerId(),
-                    redisContainer, config, dynamicConfig, tracker);
-
-            return answer;
-
+                    redisContainer::start,
+                    redisContainer, dynamicConfig, tracker.tracker());
         };
 
-        return redisContainerLocator.locateContainer(devServicesConfig.serviceName(), devServicesConfig.shared(), launchMode)
+        List<RunningDevService> runningServices = tracker.getRunningServicesWithDifferentConfig(serviceConfig);
+        return redisContainerLocator.locateContainer(devServicesConfig.serviceName(),
+                runningServices.isEmpty() && devServicesConfig.shared(), launchMode)
                 .or(() -> ComposeLocator.locateContainer(composeProjectBuildItem,
                         List.of(devServicesConfig.imageName().orElse("redis")),
                         REDIS_EXPOSED_PORT, launchMode, useSharedNetwork))
@@ -197,8 +224,9 @@ public class DevServicesRedisProcessor {
                     String redisUrl = REDIS_SCHEME + containerAddress.getUrl();
                     // If there's a pre-existing container, it's already running, so create a running container, not a runnable one
                     return new RunningDevService(Feature.REDIS_CLIENT.getName(),
+                            null,
                             containerAddress.getId(),
-                            null, configPrefix + RedisConfig.HOSTS_CONFIG_NAME, redisUrl);
+                            null, Map.of(configPrefix + RedisConfig.HOSTS_CONFIG_NAME, redisUrl));
                 })
                 .orElseGet(defaultRedisServerSupplier);
     }
