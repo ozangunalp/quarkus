@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
@@ -75,16 +76,65 @@ public class DevServicesRedisContinuousTestingTest {
         assertTrue(Arrays.stream(container.getPorts()).noneMatch(p -> p.getPublicPort() == 6377),
                 "Expected random port, but got: " + Arrays.toString(container.getPorts()));
 
+        int newPort = 6388;
         test.modifyResourceFile("application.properties",
-                s -> ContinuousTestingTestUtils.appProperties(FIXED_PORT_PROPERTIES));
+                s -> ContinuousTestingTestUtils.appProperties("%dev." + FIXED_PORT_PROPERTIES));
 
         // Force another refresh
         ping();
+        new ContinuousTestingTestUtils().waitForNextCompletion();
+
         List<Container> newContainers = getRedisContainersExcludingExisting(started);
-        assertEquals(1, newContainers.size()); // this can be wrong
-        Container newContainer = newContainers.get(0);
-        assertTrue(Arrays.stream(newContainer.getPorts()).anyMatch(p -> p.getPublicPort() == 6377),
-                "Expected port 6377, but got: " + Arrays.toString(newContainer.getPorts()));
+
+        // Continuous tests and dev mode should *not* share containers, even if the port is fixed
+        // We expect 2 containers, one for test, and one for dev
+        assertEquals(2, newContainers.size(),
+                "New containers: " + newContainers + "\n Old containers: " + started + "\n All containers: "
+                        + getAllContainers()); // this can be wrong
+        // We need to inspect the dev-mode container; we don't have a non-brittle way of distinguishing them, so just look in them all
+        boolean hasRightPort = newContainers.stream()
+                .anyMatch(newContainer -> hasPublicPort(newContainer, newPort));
+        assertTrue(hasRightPort,
+                "Expected port " + ", but got: "
+                        + newContainers.stream().map(c -> Arrays.toString(c.getPorts())).collect(Collectors.joining(", ")));
+    }
+
+    @Disabled
+    @Test
+    public void testDevModeServiceDoesNotRestartContainersOnCodeChange() {
+        List<Container> started = getRedisContainers();
+        ping();
+
+        assertFalse(started.isEmpty());
+        Container container = started.get(0);
+        assertTrue(Arrays.stream(container.getPorts()).noneMatch(p -> p.getPublicPort() == 6377),
+                "Expected random port 6377, but got: " + Arrays.toString(container.getPorts()));
+
+        int newPort = 6388;
+        // Make a change that shouldn't affect dev services
+        test.modifyFile("io/quarkus/test/devservices/redis/TestResource.class", s -> s.replaceAll("ping", "poink"));
+
+        ping();
+        new ContinuousTestingTestUtils().waitForNextCompletion();
+
+        List<Container> newContainers = getRedisContainersExcludingExisting(started);
+
+        // TODO the old behaviour was 1 container, the correct behaviour is 2, we currently get 1
+        // Continuous tests and dev mode should *not* share containers, even if the port is fixed
+        // We expect 2 containers, one for test, and one for dev
+        assertEquals(1, newContainers.size(),
+                "New containers: " + newContainers + "\n Old containers: " + started + "\n All containers: "
+                        + getAllContainers()); // this can be wrong
+        // We need to inspect the dev-mode container; we don't have a non-brittle way of distinguishing them, so just look in them all
+        boolean hasRightPort = newContainers.stream()
+                .anyMatch(newContainer -> hasPublicPort(newContainer, newPort));
+        assertTrue(hasRightPort,
+                "Expected port " + ", but got: "
+                        + newContainers.stream().map(c -> Arrays.toString(c.getPorts())).collect(Collectors.joining(", ")));
+    }
+
+    private static boolean hasPublicPort(Container newContainer, int newPort) {
+        return Arrays.stream(newContainer.getPorts()).anyMatch(p -> p.getPublicPort() == newPort);
     }
 
     void ping() {
