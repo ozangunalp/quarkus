@@ -29,7 +29,7 @@
         <resteasy-microprofile.version>3.0.1.Final</resteasy-microprofile.version>
         <resteasy-spring-web.version>3.2.0.Final</resteasy-spring-web.version>
         <resteasy.version>6.2.12.Final</resteasy.version>
-        <opentelemetry-instrumentation.version>2.10.0-alpha</opentelemetry-instrumentation.version>
+        <opentelemetry-instrumentation.version>2.12.0-alpha</opentelemetry-instrumentation.version>
         <opentelemetry-semconv.version>1.29.0-alpha</opentelemetry-semconv.version>
         <quarkus-http.version>5.3.5</quarkus-http.version>
         <micrometer.version>1.14.7</micrometer.version><!-- keep in sync with hdrhistogram: https://central.sonatype.com/artifact/io.micrometer/micrometer-core -->
@@ -94,7 +94,7 @@
         <commons-logging-jboss-logging.version>1.0.0.Final</commons-logging-jboss-logging.version>
         <commons-lang3.version>3.19.0</commons-lang3.version>
         <commons-codec.version>1.19.0</commons-codec.version>
-        <classmate.version>1.7.0</classmate.version>
+        <classmate.version>1.7.1</classmate.version>
         <!-- See root POM for hibernate-orm.version, hibernate-reactive.version, hibernate-validator.version,
              hibernate-search.version, antlr.version, bytebuddy.version -->
         <narayana.version>7.2.2.Final</narayana.version>
