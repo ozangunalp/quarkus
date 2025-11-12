@@ -18,6 +18,7 @@ public class ApicurioRegistryAvroProcessor {
     public void apicurioRegistryAvro(BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
             BuildProducer<ExtensionSslNativeSupportBuildItem> sslNativeSupport) {
 
+        // TODO cleanup this list of removed classes
         reflectiveClass.produce(ReflectiveClassBuildItem.builder("io.apicurio.registry.serde.avro.AvroKafkaDeserializer",
                 "io.apicurio.registry.serde.avro.AvroKafkaSerializer").methods().build());
 

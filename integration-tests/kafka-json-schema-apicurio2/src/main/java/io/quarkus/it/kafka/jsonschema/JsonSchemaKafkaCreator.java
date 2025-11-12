@@ -14,7 +14,8 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import io.apicurio.registry.serde.SerdeConfig;
+import io.apicurio.registry.serde.config.KafkaSerdeConfig;
+import io.apicurio.registry.serde.config.SerdeConfig;
 import io.apicurio.registry.serde.jsonschema.JsonSchemaKafkaDeserializer;
 import io.apicurio.registry.serde.jsonschema.JsonSchemaKafkaSerializer;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
@@ -123,6 +124,7 @@ public class JsonSchemaKafkaCreator {
         Properties props = getGenericConsumerProperties(bootstrap, groupdIdConfig);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonSchemaKafkaDeserializer.class.getName());
         props.put(SerdeConfig.REGISTRY_URL, apicurio);
+        props.put(KafkaSerdeConfig.ENABLE_HEADERS, "true");
         return props;
     }
 
@@ -145,6 +147,7 @@ public class JsonSchemaKafkaCreator {
         props.put(SerdeConfig.SCHEMA_LOCATION, "json-schema.json");
         props.put(SerdeConfig.VALIDATION_ENABLED, "true");
         props.put(SerdeConfig.REGISTRY_URL, apicurio);
+        props.put(KafkaSerdeConfig.ENABLE_HEADERS, "true");
         return props;
     }
 

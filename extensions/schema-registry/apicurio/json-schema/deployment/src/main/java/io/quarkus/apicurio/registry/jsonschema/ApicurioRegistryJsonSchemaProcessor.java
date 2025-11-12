@@ -17,7 +17,7 @@ public class ApicurioRegistryJsonSchemaProcessor {
     @BuildStep
     public void apicurioRegistryJsonSchema(BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
             BuildProducer<ExtensionSslNativeSupportBuildItem> sslNativeSupport) {
-
+        // TODO cleanup this list of removed classes
         reflectiveClass
                 .produce(ReflectiveClassBuildItem.builder("io.apicurio.registry.serde.jsonschema.JsonSchemaKafkaDeserializer",
                         "io.apicurio.registry.serde.jsonschema.JsonSchemaKafkaSerializer").methods().build());

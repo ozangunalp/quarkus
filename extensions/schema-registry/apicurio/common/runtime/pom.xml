@@ -17,17 +17,17 @@
     <dependencies>
         <dependency>
             <groupId>io.apicurio</groupId>
-            <artifactId>apicurio-registry-client</artifactId>
+            <artifactId>apicurio-registry-java-sdk</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>io.apicurio</groupId>
-                    <artifactId>apicurio-common-rest-client-jdk</artifactId>
+                    <groupId>io.kiota</groupId>
+                    <artifactId>kiota-http-jdk</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.vertx</groupId>
+                    <artifactId>vertx-core</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.apicurio</groupId>
-            <artifactId>apicurio-common-rest-client-vertx</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

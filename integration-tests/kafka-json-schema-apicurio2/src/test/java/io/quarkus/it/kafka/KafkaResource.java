@@ -14,6 +14,7 @@ public class KafkaResource implements QuarkusTestResourceLifecycleManager, DevSe
     @Override
     public void setIntegrationTestContext(DevServicesContext context) {
         Map<String, String> devServicesProperties = context.devServicesProperties();
+        System.out.println("devservices props: " + devServicesProperties);
         String bootstrapServers = devServicesProperties.get("kafka.bootstrap.servers");
         if (bootstrapServers != null) {
             String apicurioUrl = devServicesProperties.get("mp.messaging.connector.smallrye-kafka.apicurio.registry.url");
