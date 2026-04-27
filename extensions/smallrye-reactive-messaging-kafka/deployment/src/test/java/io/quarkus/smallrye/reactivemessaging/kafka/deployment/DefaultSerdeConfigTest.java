@@ -109,7 +109,8 @@ public class DefaultSerdeConfigTest {
             new SmallRyeReactiveMessagingKafkaProcessor().discoverDefaultSerdeConfig(discovery, Collections.emptyList(),
                     configs::add,
                     (generatedNames == null) ? null : generated::add,
-                    (reflectiveNames == null) ? null : reflective::add);
+                    (reflectiveNames == null) ? null : reflective::add,
+                    null);
 
             assertThat(configs)
                     .extracting(RunTimeConfigurationDefaultBuildItem::getKey, RunTimeConfigurationDefaultBuildItem::getValue)

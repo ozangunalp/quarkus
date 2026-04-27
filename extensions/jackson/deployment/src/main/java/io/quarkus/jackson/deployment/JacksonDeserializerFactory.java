@@ -1,4 +1,4 @@
-package io.quarkus.resteasy.reactive.jackson.deployment.processor;
+package io.quarkus.jackson.deployment;
 
 import static io.quarkus.gizmo.MethodDescriptor.ofMethod;
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
@@ -62,7 +62,7 @@ import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.gizmo.Switch;
 import io.quarkus.gizmo.TryBlock;
-import io.quarkus.resteasy.reactive.jackson.runtime.mappers.JacksonMapperUtil;
+import io.quarkus.jackson.runtime.JacksonMapperUtil;
 
 /**
  * Generates an implementation of the Jackson's {@code StdDeserializer} for each class that needs to be deserialized from json.

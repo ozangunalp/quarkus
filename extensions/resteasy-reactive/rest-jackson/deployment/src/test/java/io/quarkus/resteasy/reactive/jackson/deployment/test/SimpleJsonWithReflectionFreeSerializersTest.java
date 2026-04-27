@@ -45,6 +45,6 @@ public class SimpleJsonWithReflectionFreeSerializersTest extends AbstractSimpleJ
             })
             .setLogRecordPredicate(record -> record.getLevel().equals(Level.INFO)
                     && record.getLoggerName().equals(
-                            "io.quarkus.resteasy.reactive.jackson.deployment.processor.JacksonCodeGenerator"))
+                            "io.quarkus.jackson.deployment.JacksonCodeGenerator"))
             .assertLogRecords(records -> assertThat(records).isEmpty());
 }

@@ -1,4 +1,4 @@
-package io.quarkus.resteasy.reactive.jackson.deployment.processor;
+package io.quarkus.jackson.deployment;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayDeque;
@@ -47,11 +47,12 @@ import io.quarkus.gizmo.FieldDescriptor;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
-import io.quarkus.resteasy.reactive.jackson.SecureField;
 
 public abstract class JacksonCodeGenerator {
 
     private static final Logger log = Logger.getLogger(JacksonCodeGenerator.class);
+
+    private static final DotName SECURE_FIELD = DotName.createSimple("io.quarkus.resteasy.reactive.jackson.SecureField");
 
     protected final BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer;
     protected final IndexView jandexIndex;
@@ -549,7 +550,7 @@ public abstract class JacksonCodeGenerator {
         }
 
         String[] rolesAllowed() {
-            AnnotationInstance secureField = annotations.get(SecureField.class.getName());
+            AnnotationInstance secureField = annotations.get(SECURE_FIELD.toString());
             if (secureField != null) {
                 AnnotationValue rolesAllowed = secureField.value("rolesAllowed");
                 return rolesAllowed != null ? rolesAllowed.asStringArray() : null;

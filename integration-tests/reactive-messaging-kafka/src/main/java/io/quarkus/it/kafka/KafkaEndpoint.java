@@ -11,6 +11,9 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.quarkus.redis.client.RedisClientName;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.smallrye.reactive.messaging.kafka.Record;
@@ -20,6 +23,9 @@ import io.smallrye.reactive.messaging.kafka.commit.ProcessingState;
 public class KafkaEndpoint {
     @Inject
     KafkaReceivers receivers;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Inject
     @RedisClientName("my-redis")
@@ -51,6 +57,16 @@ public class KafkaEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Pet> getPets() {
         return receivers.getPets().stream().map(Record::key).collect(Collectors.toList());
+    }
+
+    @GET
+    @Path("/reflection-free-serializer/{className}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getSerializerClass(@PathParam("className") String className) throws Exception {
+        Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+        JsonSerializer<?> serializer = objectMapper.getSerializerProviderInstance()
+                .findValueSerializer(clazz);
+        return serializer.getClass().getName();
     }
 
     @GET

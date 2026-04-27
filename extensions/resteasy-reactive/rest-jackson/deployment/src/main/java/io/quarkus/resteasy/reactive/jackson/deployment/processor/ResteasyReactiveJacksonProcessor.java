@@ -61,10 +61,10 @@ import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
-import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.RuntimeConfigSetupCompleteBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.jackson.spi.ReflectionFreeJacksonSerializationBuildItem;
 import io.quarkus.resteasy.reactive.common.deployment.JaxRsResourceIndexBuildItem;
 import io.quarkus.resteasy.reactive.common.deployment.QuarkusResteasyReactiveDotNames;
 import io.quarkus.resteasy.reactive.common.deployment.ResourceScanningResultBuildItem;
@@ -82,7 +82,6 @@ import io.quarkus.resteasy.reactive.jackson.runtime.security.SecurityCustomSeria
 import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.BasicServerJacksonMessageBodyWriter;
 import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.FullyFeaturedServerJacksonMessageBodyReader;
 import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.FullyFeaturedServerJacksonMessageBodyWriter;
-import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.GeneratedSerializersRegister;
 import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.ServerJacksonMessageBodyReader;
 import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.vertx.VertxJsonArrayMessageBodyReader;
 import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.vertx.VertxJsonArrayMessageBodyWriter;
@@ -395,53 +394,32 @@ public class ResteasyReactiveJacksonProcessor {
     }
 
     @BuildStep(onlyIf = JacksonOptimizationConfig.IsReflectionFreeSerializersEnabled.class)
-    @Record(ExecutionTime.STATIC_INIT)
     public void handleEndpointParams(ResteasyReactiveResourceMethodEntriesBuildItem resourceMethodEntries,
-            JaxRsResourceIndexBuildItem jaxRsIndex, CombinedIndexBuildItem index,
-            ResteasyReactiveServerJacksonRecorder recorder,
-            BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer) {
+            JaxRsResourceIndexBuildItem jaxRsIndex,
+            BuildProducer<ReflectionFreeJacksonSerializationBuildItem> reflectionFreeProducer) {
 
         IndexView indexView = jaxRsIndex.getIndexView();
-
-        Map<String, ClassInfo> serializedClasses = new HashMap<>();
-        Map<String, ClassInfo> deserializedClasses = new HashMap<>();
+        Set<String> seen = new HashSet<>();
 
         for (ResteasyReactiveResourceMethodEntriesBuildItem.Entry entry : resourceMethodEntries.getEntries()) {
             MethodInfo methodInfo = entry.getMethodInfo();
             ClassInfo effectiveReturnClassInfo = getEffectiveClassInfo(methodInfo.returnType(), indexView);
-            if (effectiveReturnClassInfo != null && !effectiveReturnClassInfo.isEnum()) {
-                serializedClasses.put(effectiveReturnClassInfo.name().toString(), effectiveReturnClassInfo);
+            if (effectiveReturnClassInfo != null && !effectiveReturnClassInfo.isEnum()
+                    && seen.add(effectiveReturnClassInfo.name().toString())) {
+                reflectionFreeProducer.produce(new ReflectionFreeJacksonSerializationBuildItem(effectiveReturnClassInfo));
             }
 
             if (methodInfo.hasAnnotation(POST.class) || methodInfo.hasAnnotation(PUT.class)
                     || methodInfo.hasAnnotation(PATCH.class)) {
                 for (Type paramType : methodInfo.parameterTypes()) {
                     ClassInfo effectiveParamClassInfo = getEffectiveClassInfo(paramType, indexView);
-                    if (effectiveParamClassInfo != null) {
-                        deserializedClasses.put(effectiveParamClassInfo.name().toString(), effectiveParamClassInfo);
+                    if (effectiveParamClassInfo != null && seen.add(effectiveParamClassInfo.name().toString())) {
+                        reflectionFreeProducer
+                                .produce(new ReflectionFreeJacksonSerializationBuildItem(effectiveParamClassInfo));
                     }
                 }
             }
         }
-
-        if (!serializedClasses.isEmpty()) {
-            JacksonSerializerFactory factory = new JacksonSerializerFactory(generatedClassBuildItemBuildProducer,
-                    index.getComputingIndex());
-            factory.create(serializedClasses.values())
-                    .forEach(recorder::recordGeneratedSerializer);
-        }
-
-        if (!deserializedClasses.isEmpty()) {
-            JacksonDeserializerFactory factory = new JacksonDeserializerFactory(generatedClassBuildItemBuildProducer,
-                    index.getComputingIndex());
-            factory.create(deserializedClasses.values())
-                    .forEach(recorder::recordGeneratedDeserializer);
-        }
-    }
-
-    @BuildStep(onlyIf = JacksonOptimizationConfig.IsReflectionFreeSerializersEnabled.class)
-    void unremovable(BuildProducer<AdditionalBeanBuildItem> additionalProducer) {
-        additionalProducer.produce(AdditionalBeanBuildItem.unremovableOf(GeneratedSerializersRegister.class));
     }
 
     @BuildStep

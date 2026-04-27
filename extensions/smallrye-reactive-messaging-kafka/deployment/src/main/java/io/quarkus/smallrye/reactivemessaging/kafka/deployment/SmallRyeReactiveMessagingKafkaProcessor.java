@@ -44,6 +44,7 @@ import io.quarkus.deployment.builditem.RuntimeConfigSetupCompleteBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.logging.LogCleanupFilterBuildItem;
 import io.quarkus.hibernate.orm.deployment.spi.AdditionalJpaModelBuildItem;
+import io.quarkus.jackson.spi.ReflectionFreeJacksonSerializationBuildItem;
 import io.quarkus.smallrye.reactivemessaging.deployment.ReactiveMessagingDotNames;
 import io.quarkus.smallrye.reactivemessaging.deployment.items.ChannelDirection;
 import io.quarkus.smallrye.reactivemessaging.deployment.items.ConnectorManagedChannelBuildItem;
@@ -188,12 +189,14 @@ public class SmallRyeReactiveMessagingKafkaProcessor {
             List<ConnectorManagedChannelBuildItem> channelsManagedByConnectors,
             BuildProducer<RunTimeConfigurationDefaultBuildItem> defaultConfigProducer,
             BuildProducer<GeneratedClassBuildItem> generatedClass,
-            BuildProducer<ReflectiveClassBuildItem> reflection) {
+            BuildProducer<ReflectiveClassBuildItem> reflection,
+            BuildProducer<ReflectionFreeJacksonSerializationBuildItem> reflectionFreeProducer) {
 
         DefaultSerdeDiscoveryState discoveryState = new DefaultSerdeDiscoveryState(combinedIndex.getIndex());
         if (buildTimeConfig.serializerAutodetectionEnabled()) {
             discoverDefaultSerdeConfig(discoveryState, channelsManagedByConnectors, defaultConfigProducer,
-                    buildTimeConfig.serializerGenerationEnabled() ? generatedClass : null, reflection);
+                    buildTimeConfig.serializerGenerationEnabled() ? generatedClass : null, reflection,
+                    reflectionFreeProducer);
         }
 
         if (launchMode.getLaunchMode().isDevOrTest()) {
@@ -224,7 +227,8 @@ public class SmallRyeReactiveMessagingKafkaProcessor {
             List<ConnectorManagedChannelBuildItem> channelsManagedByConnectors,
             BuildProducer<RunTimeConfigurationDefaultBuildItem> config,
             BuildProducer<GeneratedClassBuildItem> generatedClass,
-            BuildProducer<ReflectiveClassBuildItem> reflection) {
+            BuildProducer<ReflectiveClassBuildItem> reflection,
+            BuildProducer<ReflectionFreeJacksonSerializationBuildItem> reflectionFreeProducer) {
         Map<String, String> alreadyGeneratedSerializers = new HashMap<>();
         Map<String, String> alreadyGeneratedDeserializers = new HashMap<>();
         for (AnnotationInstance annotation : discovery.findRepeatableAnnotationsOnMethods(DotNames.INCOMING)) {
@@ -310,6 +314,19 @@ public class SmallRyeReactiveMessagingKafkaProcessor {
 
                     handleAdditionalProperties(channelName, false, discovery, config, keySerializer, valueSerializer);
                 }, generatedClass, reflection, alreadyGeneratedSerializers);
+            }
+        }
+
+        if (reflectionFreeProducer != null) {
+            IndexView index = discovery.getIndex();
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            seen.addAll(alreadyGeneratedSerializers.keySet());
+            seen.addAll(alreadyGeneratedDeserializers.keySet());
+            for (String typeName : seen) {
+                ClassInfo classInfo = index.getClassByName(typeName);
+                if (classInfo != null) {
+                    reflectionFreeProducer.produce(new ReflectionFreeJacksonSerializationBuildItem(classInfo));
+                }
             }
         }
     }

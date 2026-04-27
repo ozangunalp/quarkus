@@ -15,8 +15,8 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import io.quarkus.arc.Arc;
+import io.quarkus.jackson.runtime.ReflectionFreeSerializersRegister;
 import io.quarkus.resteasy.reactive.jackson.runtime.security.RolesAllowedConfigExpStorage;
-import io.quarkus.resteasy.reactive.jackson.runtime.serialisers.GeneratedSerializersRegister;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
@@ -82,11 +82,11 @@ public class ResteasyReactiveServerJacksonRecorder {
     }
 
     public void recordGeneratedSerializer(String className) {
-        GeneratedSerializersRegister.addSerializer((Class<? extends StdSerializer>) loadClass(className));
+        ReflectionFreeSerializersRegister.addSerializer((Class<? extends StdSerializer>) loadClass(className));
     }
 
     public void recordGeneratedDeserializer(String className) {
-        GeneratedSerializersRegister.addDeserializer((Class<? extends StdDeserializer>) loadClass(className));
+        ReflectionFreeSerializersRegister.addDeserializer((Class<? extends StdDeserializer>) loadClass(className));
     }
 
     public void configureShutdown(ShutdownContext shutdownContext) {

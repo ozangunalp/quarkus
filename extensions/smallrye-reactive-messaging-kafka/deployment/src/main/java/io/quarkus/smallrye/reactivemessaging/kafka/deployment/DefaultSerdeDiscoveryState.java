@@ -44,6 +44,10 @@ class DefaultSerdeDiscoveryState {
         this.index = index;
     }
 
+    IndexView getIndex() {
+        return index;
+    }
+
     Config getConfig() {
         return ConfigProvider.getConfig();
     }

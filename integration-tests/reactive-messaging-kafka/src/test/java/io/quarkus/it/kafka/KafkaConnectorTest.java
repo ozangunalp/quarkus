@@ -117,6 +117,18 @@ public class KafkaConnectorTest {
 
     @Test
     @Order(8)
+    public void testReflectionFreeSerializersRegistered() {
+        String petSerializer = get("/kafka/reflection-free-serializer/io.quarkus.it.kafka.Pet").asString();
+        Assertions.assertTrue(petSerializer.contains("$quarkusjacksonserializer"),
+                "Expected reflection-free serializer for Pet but got: " + petSerializer);
+
+        String fruitSerializer = get("/kafka/reflection-free-serializer/io.quarkus.it.kafka.Fruit").asString();
+        Assertions.assertTrue(fruitSerializer.contains("$quarkusjacksonserializer"),
+                "Expected reflection-free serializer for Fruit but got: " + fruitSerializer);
+    }
+
+    @Test
+    @Order(9)
     void testPrometheusScrapeEndpointOpenMetrics() {
         given().header("Accept", "text/plain; version=0.0.4; charset=utf-8")
                 .when().get("/q/metrics")

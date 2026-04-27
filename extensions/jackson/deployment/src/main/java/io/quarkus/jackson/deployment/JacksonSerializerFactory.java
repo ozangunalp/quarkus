@@ -1,4 +1,4 @@
-package io.quarkus.resteasy.reactive.jackson.deployment.processor;
+package io.quarkus.jackson.deployment;
 
 import static org.objectweb.asm.Opcodes.ACC_FINAL;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -42,7 +42,7 @@ import io.quarkus.gizmo.FieldDescriptor;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
-import io.quarkus.resteasy.reactive.jackson.runtime.mappers.JacksonMapperUtil;
+import io.quarkus.jackson.runtime.JacksonMapperUtil;
 
 /**
  * Generates an implementation of the Jackson's {@code StdSerializer} for each class that needs to be serialized in json.
@@ -171,6 +171,8 @@ public class JacksonSerializerFactory extends JacksonCodeGenerator {
     private static final String SUPER_CLASS_NAME = StdSerializer.class.getName();
     private static final String JSON_GEN_CLASS_NAME = JsonGenerator.class.getName();
     private static final String SER_STRINGS_CLASS_NAME = "SerializedStrings$quarkusjacksonserializer";
+
+    private static final String SECURE_FIELD_UTIL_CLASS = "io.quarkus.jackson.runtime.JacksonMapperUtil";
 
     private final Map<String, Set<String>> generatedFields = new HashMap<>();
 
@@ -464,7 +466,7 @@ public class JacksonSerializerFactory extends JacksonCodeGenerator {
                     FieldDescriptor.of(classCreator.getClassName(), fieldSpecs.fieldName + "_ROLES_ALLOWED",
                             String[].class.getName()));
 
-            MethodDescriptor includeSecureField = MethodDescriptor.ofMethod(JacksonMapperUtil.class, "includeSecureField",
+            MethodDescriptor includeSecureField = MethodDescriptor.ofMethod(SECURE_FIELD_UTIL_CLASS, "includeSecureField",
                     boolean.class, SerializerProvider.class, String[].class);
             ResultHandle included = bytecode.invokeStaticMethod(includeSecureField, ctx.serializerProvider, rolesArrayReader);
             bytecode = bytecode.ifTrue(included).trueBranch();

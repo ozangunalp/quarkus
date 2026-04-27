@@ -1,4 +1,4 @@
-package io.quarkus.resteasy.reactive.jackson.deployment.processor;
+package io.quarkus.jackson.deployment;
 
 import org.jboss.jandex.Type;
 import org.jboss.jandex.Type.Kind;

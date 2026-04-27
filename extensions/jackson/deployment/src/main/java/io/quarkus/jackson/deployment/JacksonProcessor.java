@@ -56,6 +56,7 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
+import io.quarkus.deployment.builditem.GeneratedClassBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveHierarchyBuildItem;
@@ -77,9 +78,11 @@ import io.quarkus.jackson.runtime.JacksonBuildTimeConfig;
 import io.quarkus.jackson.runtime.JacksonRecorder;
 import io.quarkus.jackson.runtime.JacksonSupport;
 import io.quarkus.jackson.runtime.ObjectMapperProducer;
+import io.quarkus.jackson.runtime.ReflectionFreeSerializersRegister;
 import io.quarkus.jackson.runtime.VertxHybridPoolObjectMapperCustomizer;
 import io.quarkus.jackson.spi.ClassPathJacksonModuleBuildItem;
 import io.quarkus.jackson.spi.JacksonModuleBuildItem;
+import io.quarkus.jackson.spi.ReflectionFreeJacksonSerializationBuildItem;
 
 public class JacksonProcessor {
 
@@ -580,5 +583,40 @@ public class JacksonProcessor {
                 + "'. Make sure that the value is either a fully qualified class name of a subclass of '"
                 + PropertyNamingStrategy.class.getName()
                 + "' or one of the constants defined in '" + PropertyNamingStrategies.class.getName() + "'.";
+    }
+
+    @BuildStep
+    void reflectionFreeSerializersBean(BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
+        additionalBeans.produce(AdditionalBeanBuildItem.unremovableOf(ReflectionFreeSerializersRegister.class));
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
+    public void generateReflectionFreeSerializers(
+            List<ReflectionFreeJacksonSerializationBuildItem> serializationItems,
+            CombinedIndexBuildItem index,
+            JacksonRecorder recorder,
+            BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer) {
+        if (serializationItems.isEmpty()) {
+            return;
+        }
+
+        Map<String, ClassInfo> serializedClasses = new HashMap<>();
+        for (ReflectionFreeJacksonSerializationBuildItem item : serializationItems) {
+            ClassInfo classInfo = item.getClassInfo();
+            serializedClasses.putIfAbsent(classInfo.name().toString(), classInfo);
+        }
+
+        IndexView computingIndex = index.getComputingIndex();
+
+        JacksonSerializerFactory serializerFactory = new JacksonSerializerFactory(
+                generatedClassBuildItemBuildProducer, computingIndex);
+        serializerFactory.create(serializedClasses.values())
+                .forEach(recorder::recordGeneratedSerializer);
+
+        JacksonDeserializerFactory deserializerFactory = new JacksonDeserializerFactory(
+                generatedClassBuildItemBuildProducer, computingIndex);
+        deserializerFactory.create(serializedClasses.values())
+                .forEach(recorder::recordGeneratedDeserializer);
     }
 }

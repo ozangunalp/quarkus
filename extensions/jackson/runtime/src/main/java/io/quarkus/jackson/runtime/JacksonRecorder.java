@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import io.quarkus.jackson.ObjectMapperCustomizer;
@@ -65,6 +67,27 @@ public class JacksonRecorder {
                 };
             }
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    @StaticInit
+    public void recordGeneratedSerializer(String className) {
+        ReflectionFreeSerializersRegister.addSerializer((Class<? extends StdSerializer>) loadClass(className));
+    }
+
+    @SuppressWarnings("unchecked")
+    @StaticInit
+    public void recordGeneratedDeserializer(String className) {
+        ReflectionFreeSerializersRegister.addDeserializer((Class<? extends StdDeserializer>) loadClass(className));
+    }
+
+    private Class<?> loadClass(String className) {
+        try {
+            return Thread.currentThread().getContextClassLoader().loadClass(className);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(
+                    "Unable to load generated Jackson serializer/deserializer class '" + className + "'", e);
+        }
     }
 
     @RuntimeInit
