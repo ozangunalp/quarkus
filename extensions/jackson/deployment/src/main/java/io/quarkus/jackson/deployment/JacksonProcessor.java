@@ -82,6 +82,7 @@ import io.quarkus.jackson.runtime.ReflectionFreeSerializersRegister;
 import io.quarkus.jackson.runtime.VertxHybridPoolObjectMapperCustomizer;
 import io.quarkus.jackson.spi.ClassPathJacksonModuleBuildItem;
 import io.quarkus.jackson.spi.JacksonModuleBuildItem;
+import io.quarkus.jackson.spi.JacksonSerializationFieldFilterBuildItem;
 import io.quarkus.jackson.spi.ReflectionFreeJacksonSerializationBuildItem;
 
 public class JacksonProcessor {
@@ -594,6 +595,7 @@ public class JacksonProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     public void generateReflectionFreeSerializers(
             List<ReflectionFreeJacksonSerializationBuildItem> serializationItems,
+            List<JacksonSerializationFieldFilterBuildItem> fieldFilters,
             CombinedIndexBuildItem index,
             JacksonRecorder recorder,
             BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer) {
@@ -610,12 +612,12 @@ public class JacksonProcessor {
         IndexView computingIndex = index.getComputingIndex();
 
         JacksonSerializerFactory serializerFactory = new JacksonSerializerFactory(
-                generatedClassBuildItemBuildProducer, computingIndex);
+                generatedClassBuildItemBuildProducer, computingIndex, fieldFilters);
         serializerFactory.create(serializedClasses.values())
                 .forEach(recorder::recordGeneratedSerializer);
 
         JacksonDeserializerFactory deserializerFactory = new JacksonDeserializerFactory(
-                generatedClassBuildItemBuildProducer, computingIndex);
+                generatedClassBuildItemBuildProducer, computingIndex, fieldFilters);
         deserializerFactory.create(serializedClasses.values())
                 .forEach(recorder::recordGeneratedDeserializer);
     }

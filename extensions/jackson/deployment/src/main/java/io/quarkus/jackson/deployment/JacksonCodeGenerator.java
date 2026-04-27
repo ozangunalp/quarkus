@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -47,23 +48,24 @@ import io.quarkus.gizmo.FieldDescriptor;
 import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
+import io.quarkus.jackson.spi.JacksonSerializationFieldFilterBuildItem;
 
 public abstract class JacksonCodeGenerator {
 
     private static final Logger log = Logger.getLogger(JacksonCodeGenerator.class);
 
-    private static final DotName SECURE_FIELD = DotName.createSimple("io.quarkus.resteasy.reactive.jackson.SecureField");
-
     protected final BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer;
     protected final IndexView jandexIndex;
+    protected final List<JacksonSerializationFieldFilterBuildItem> fieldFilters;
 
     protected final Set<String> generatedClassNames = new HashSet<>();
     protected final Deque<ClassInfo> toBeGenerated = new ArrayDeque<>();
 
     public JacksonCodeGenerator(BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer,
-            IndexView jandexIndex) {
+            IndexView jandexIndex, List<JacksonSerializationFieldFilterBuildItem> fieldFilters) {
         this.generatedClassBuildItemBuildProducer = generatedClassBuildItemBuildProducer;
         this.jandexIndex = jandexIndex;
+        this.fieldFilters = fieldFilters;
     }
 
     protected abstract String getSuperClassName();
@@ -549,13 +551,21 @@ public abstract class JacksonCodeGenerator {
             };
         }
 
-        String[] rolesAllowed() {
-            AnnotationInstance secureField = annotations.get(SECURE_FIELD.toString());
-            if (secureField != null) {
-                AnnotationValue rolesAllowed = secureField.value("rolesAllowed");
-                return rolesAllowed != null ? rolesAllowed.asStringArray() : null;
+        FieldFilterMatch findFieldFilter(List<JacksonSerializationFieldFilterBuildItem> filters) {
+            for (JacksonSerializationFieldFilterBuildItem filter : filters) {
+                AnnotationInstance ann = annotations.get(filter.getAnnotationName());
+                if (ann != null) {
+                    AnnotationValue value = ann.value(filter.getAnnotationValueName());
+                    if (value != null) {
+                        return new FieldFilterMatch(filter.getFilterClassName(), filter.getFilterMethodName(),
+                                value.asStringArray());
+                    }
+                }
             }
             return null;
         }
+    }
+
+    protected record FieldFilterMatch(String filterClassName, String filterMethodName, String[] values) {
     }
 }

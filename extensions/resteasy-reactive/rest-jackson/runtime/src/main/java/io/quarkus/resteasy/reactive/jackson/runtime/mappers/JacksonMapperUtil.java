@@ -12,10 +12,6 @@ import io.quarkus.arc.InstanceHandle;
 import io.quarkus.resteasy.reactive.jackson.runtime.security.RolesAllowedConfigExpStorage;
 import io.quarkus.security.identity.SecurityIdentity;
 
-/**
- * REST-specific Jackson utilities. Shared (non-REST) utilities have been moved to
- * {@code io.quarkus.jackson.runtime.JacksonMapperUtil}.
- */
 public class JacksonMapperUtil {
 
     public static boolean includeSecureField(SerializerProvider serializerProvider, String[] rolesAllowed) {

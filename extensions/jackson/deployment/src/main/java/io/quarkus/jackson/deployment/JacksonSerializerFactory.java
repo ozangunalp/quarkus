@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,6 +44,7 @@ import io.quarkus.gizmo.MethodCreator;
 import io.quarkus.gizmo.MethodDescriptor;
 import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.jackson.runtime.JacksonMapperUtil;
+import io.quarkus.jackson.spi.JacksonSerializationFieldFilterBuildItem;
 
 /**
  * Generates an implementation of the Jackson's {@code StdSerializer} for each class that needs to be serialized in json.
@@ -172,13 +174,11 @@ public class JacksonSerializerFactory extends JacksonCodeGenerator {
     private static final String JSON_GEN_CLASS_NAME = JsonGenerator.class.getName();
     private static final String SER_STRINGS_CLASS_NAME = "SerializedStrings$quarkusjacksonserializer";
 
-    private static final String SECURE_FIELD_UTIL_CLASS = "io.quarkus.jackson.runtime.JacksonMapperUtil";
-
     private final Map<String, Set<String>> generatedFields = new HashMap<>();
 
     public JacksonSerializerFactory(BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer,
-            IndexView jandexIndex) {
-        super(generatedClassBuildItemBuildProducer, jandexIndex);
+            IndexView jandexIndex, List<JacksonSerializationFieldFilterBuildItem> fieldFilters) {
+        super(generatedClassBuildItemBuildProducer, jandexIndex, fieldFilters);
     }
 
     @Override
@@ -448,27 +448,27 @@ public class JacksonSerializerFactory extends JacksonCodeGenerator {
             SerializationContext ctx) {
         bytecode = writeViewClasses(classCreator, bytecode, fieldSpecs, ctx);
 
-        String[] rolesAllowed = fieldSpecs.rolesAllowed();
-        if (rolesAllowed != null) {
+        FieldFilterMatch filterMatch = fieldSpecs.findFieldFilter(fieldFilters);
+        if (filterMatch != null) {
             MethodCreator clinit = classCreator.getMethodCreator("<clinit>", void.class).setModifiers(ACC_STATIC);
 
-            ResultHandle rolesArray = clinit.newArray(String.class, rolesAllowed.length);
-            for (int i = 0; i < rolesAllowed.length; ++i) {
-                clinit.writeArrayValue(rolesArray, clinit.load(i), clinit.load(rolesAllowed[i]));
+            ResultHandle valuesArray = clinit.newArray(String.class, filterMatch.values().length);
+            for (int i = 0; i < filterMatch.values().length; ++i) {
+                clinit.writeArrayValue(valuesArray, clinit.load(i), clinit.load(filterMatch.values()[i]));
             }
 
-            FieldCreator roleFieldCreator = classCreator
-                    .getFieldCreator(fieldSpecs.fieldName + "_ROLES_ALLOWED", String[].class.getName())
+            String staticFieldName = fieldSpecs.fieldName + "_FILTER_VALUES";
+            FieldCreator filterFieldCreator = classCreator
+                    .getFieldCreator(staticFieldName, String[].class.getName())
                     .setModifiers(ACC_STATIC | ACC_FINAL);
-            clinit.writeStaticField(roleFieldCreator.getFieldDescriptor(), rolesArray);
+            clinit.writeStaticField(filterFieldCreator.getFieldDescriptor(), valuesArray);
 
-            ResultHandle rolesArrayReader = bytecode.readStaticField(
-                    FieldDescriptor.of(classCreator.getClassName(), fieldSpecs.fieldName + "_ROLES_ALLOWED",
-                            String[].class.getName()));
+            ResultHandle valuesReader = bytecode.readStaticField(
+                    FieldDescriptor.of(classCreator.getClassName(), staticFieldName, String[].class.getName()));
 
-            MethodDescriptor includeSecureField = MethodDescriptor.ofMethod(SECURE_FIELD_UTIL_CLASS, "includeSecureField",
-                    boolean.class, SerializerProvider.class, String[].class);
-            ResultHandle included = bytecode.invokeStaticMethod(includeSecureField, ctx.serializerProvider, rolesArrayReader);
+            MethodDescriptor filterMethod = MethodDescriptor.ofMethod(filterMatch.filterClassName(),
+                    filterMatch.filterMethodName(), boolean.class, SerializerProvider.class, String[].class);
+            ResultHandle included = bytecode.invokeStaticMethod(filterMethod, ctx.serializerProvider, valuesReader);
             bytecode = bytecode.ifTrue(included).trueBranch();
         }
 

@@ -63,6 +63,7 @@ import io.quarkus.gizmo.ResultHandle;
 import io.quarkus.gizmo.Switch;
 import io.quarkus.gizmo.TryBlock;
 import io.quarkus.jackson.runtime.JacksonMapperUtil;
+import io.quarkus.jackson.spi.JacksonSerializationFieldFilterBuildItem;
 
 /**
  * Generates an implementation of the Jackson's {@code StdDeserializer} for each class that needs to be deserialized from json.
@@ -220,8 +221,8 @@ import io.quarkus.jackson.runtime.JacksonMapperUtil;
 public class JacksonDeserializerFactory extends JacksonCodeGenerator {
 
     public JacksonDeserializerFactory(BuildProducer<GeneratedClassBuildItem> generatedClassBuildItemBuildProducer,
-            IndexView jandexIndex) {
-        super(generatedClassBuildItemBuildProducer, jandexIndex);
+            IndexView jandexIndex, List<JacksonSerializationFieldFilterBuildItem> fieldFilters) {
+        super(generatedClassBuildItemBuildProducer, jandexIndex, fieldFilters);
     }
 
     @Override

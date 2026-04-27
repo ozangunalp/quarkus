@@ -64,6 +64,7 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.RuntimeConfigSetupCompleteBuildItem;
 import io.quarkus.deployment.builditem.ShutdownContextBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.jackson.spi.JacksonSerializationFieldFilterBuildItem;
 import io.quarkus.jackson.spi.ReflectionFreeJacksonSerializationBuildItem;
 import io.quarkus.resteasy.reactive.common.deployment.JaxRsResourceIndexBuildItem;
 import io.quarkus.resteasy.reactive.common.deployment.QuarkusResteasyReactiveDotNames;
@@ -391,6 +392,13 @@ public class ResteasyReactiveJacksonProcessor {
         if (initAndValidateItem.isPresent()) {
             recorder.initAndValidateRolesAllowedConfigExp();
         }
+    }
+
+    @BuildStep
+    void registerSecureFieldFilter(BuildProducer<JacksonSerializationFieldFilterBuildItem> producer) {
+        producer.produce(new JacksonSerializationFieldFilterBuildItem(
+                SecureField.class.getName(), "rolesAllowed",
+                "io.quarkus.resteasy.reactive.jackson.runtime.mappers.JacksonMapperUtil", "includeSecureField"));
     }
 
     @BuildStep(onlyIf = JacksonOptimizationConfig.IsReflectionFreeSerializersEnabled.class)
