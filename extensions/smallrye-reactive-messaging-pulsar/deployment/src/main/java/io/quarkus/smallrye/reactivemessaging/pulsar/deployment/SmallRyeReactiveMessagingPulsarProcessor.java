@@ -196,6 +196,7 @@ public class SmallRyeReactiveMessagingPulsarProcessor {
         NativeImageConfigBuildItem.Builder nativeImageConfig = NativeImageConfigBuildItem.builder()
                 .addNativeImageSystemProperty("io.netty.handler.ssl.noOpenSsl", "true")
                 .addRuntimeInitializedClass("org.apache.pulsar.common.allocator.PulsarByteBufAllocator")
+                .addRuntimeInitializedClass("org.apache.pulsar.common.api.proto.LightProtoCodec")
                 .addRuntimeInitializedClass("org.apache.pulsar.common.protocol.Commands")
                 .addRuntimeInitializedClass("org.apache.pulsar.client.impl.auth.oauth2.protocol.TokenClient")
                 .addRuntimeInitializedClass("org.apache.pulsar.client.impl.crypto.MessageCryptoBc")
